@@ -116,6 +116,7 @@ mod query_pool;
 mod rpc;
 pub mod service;
 mod socket;
+pub mod tracing; // TODO conditional compilation
 
 #[macro_use]
 extern crate lazy_static;

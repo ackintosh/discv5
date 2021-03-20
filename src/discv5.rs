@@ -127,6 +127,10 @@ impl Discv5 {
         .await?;
         self.service_exit = Some(service_exit);
         self.service_channel = Some(service_channel);
+
+        // TODO: conditional compilation
+        crate::tracing::node_started(self.local_enr.read().node_id());
+
         Ok(())
     }
 
@@ -269,7 +273,7 @@ impl Discv5 {
         PERMIT_BAN_LIST.write().ban_nodes.remove(node_id);
     }
 
-    /// Permits a node, allowing the node to bypass the packet filter.  
+    /// Permits a node, allowing the node to bypass the packet filter.
     pub fn permit_node(&mut self, node_id: &NodeId) {
         PERMIT_BAN_LIST.write().permit_nodes.insert(*node_id);
     }
@@ -289,7 +293,7 @@ impl Discv5 {
         PERMIT_BAN_LIST.write().ban_ips.remove(ip);
     }
 
-    /// Permits an IP, allowing the all packets from the IP to bypass the packet filter.  
+    /// Permits an IP, allowing the all packets from the IP to bypass the packet filter.
     pub fn permit_ip(&mut self, ip: std::net::IpAddr) {
         PERMIT_BAN_LIST.write().permit_ips.insert(ip);
     }

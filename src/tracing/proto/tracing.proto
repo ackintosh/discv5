@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package tracing;
+
+message Log {
+  google.protobuf.Timestamp timestamp = 1;
+  oneof event {
+    NodeStarted node_started = 2;
+    SendWhoAreYou send_whoareyou = 3;
+    SendOrdinaryMessage send_ordinary_message = 4;
+  }
+
+  message NodeStarted {
+    string node_id = 1;
+  }
+
+  // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#whoareyou-packet-flag--1
+  message SendWhoAreYou {
+    string sender = 1;
+    string recipient = 2;
+    uint64 id_nonce = 3; // TODO: uint128
+    uint64 enr_seq = 4;
+  }
+
+  // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#ordinary-message-packet-flag--0
+  message SendOrdinaryMessage {
+    string sender = 1;
+    string recipient = 2;
+    oneof message {
+      Ping ping = 3;
+      Pong pong = 4;
+      FindNode find_node = 5;
+      Nodes nodes = 6;
+    }
+
+    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#ping-request-0x01
+    message Ping {
+      string request_id = 1;
+      uint64 enr_seq = 2;
+    }
+
+    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#pong-response-0x02
+    message Pong {
+      string request_id = 1;
+      uint64 enr_seq = 2;
+      string recipient_ip = 3;
+      uint32 recipient_port = 4;
+    }
+
+    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#findnode-request-0x03
+    message FindNode {
+      string request_id = 1;
+      repeated uint32 distances = 2;
+    }
+
+    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#nodes-response-0x04
+    message Nodes {
+      string request_id = 1;
+      int32 total = 2;
+      repeated string nodes = 3;
+    }
+  }
+}

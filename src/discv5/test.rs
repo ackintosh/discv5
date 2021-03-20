@@ -160,6 +160,8 @@ fn find_seed_spread_bucket() {
 /// This is a smaller version of the star topology test designed to debug issues with queries.
 #[tokio::test]
 async fn test_discovery_three_peers() {
+    crate::tracing::clear_log(); // tracing
+
     init();
     let total_nodes = 3;
     // Seed is chosen such that all nodes are in the 256th bucket of bootstrap

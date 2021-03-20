@@ -40,6 +40,8 @@ aes-ctr = "0.6.0"
 k256 = { version = "0.7", features = ["zeroize", "ecdh", "sha2"] }
 tracing = { version = "0.1.21", features = ["log"] }
 tracing-subscriber = "0.2.15"
+protobuf = "2.22.0" # tracing
+chrono = "0.4" # tracing
 
 [dev-dependencies]
 quickcheck = "0.9.2"
@@ -50,6 +52,10 @@ tokio-util = { version = "0.6.2", features = ["time"] }
 tokio = { version = "1.1", features = ["full"] }
 rand_xorshift = "0.2.0"
 rand_core = "0.5.1"
+
+[build-dependencies]
+# tracing
+protoc-rust = "2.22.0"
 
 [features]
 libp2p = ["libp2p-core"]
