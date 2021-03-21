@@ -515,6 +515,10 @@ impl Handler {
         let challenge_data = ChallengeData::try_from(packet.authenticated_data().as_slice())
             .expect("Must be the correct challenge size");
         debug!("Sending WHOAREYOU to {}", node_address);
+
+        // TODO: conditional compilation
+        crate::tracing::send_whoareyou(&self.node_id, &node_address.node_id, &id_nonce, enr_seq);
+
         self.send(node_address.clone(), packet).await;
         self.active_challenges.insert(
             node_address,

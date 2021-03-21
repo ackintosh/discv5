@@ -603,7 +603,7 @@ pub struct Log_SendWhoAreYou {
     // message fields
     pub sender: ::std::string::String,
     pub recipient: ::std::string::String,
-    pub id_nonce: u64,
+    pub id_nonce: ::std::vec::Vec<u32>,
     pub enr_seq: u64,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
@@ -673,19 +673,29 @@ impl Log_SendWhoAreYou {
         ::std::mem::replace(&mut self.recipient, ::std::string::String::new())
     }
 
-    // uint64 id_nonce = 3;
+    // repeated uint32 id_nonce = 3;
 
 
-    pub fn get_id_nonce(&self) -> u64 {
-        self.id_nonce
+    pub fn get_id_nonce(&self) -> &[u32] {
+        &self.id_nonce
     }
     pub fn clear_id_nonce(&mut self) {
-        self.id_nonce = 0;
+        self.id_nonce.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_id_nonce(&mut self, v: u64) {
+    pub fn set_id_nonce(&mut self, v: ::std::vec::Vec<u32>) {
         self.id_nonce = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_id_nonce(&mut self) -> &mut ::std::vec::Vec<u32> {
+        &mut self.id_nonce
+    }
+
+    // Take field
+    pub fn take_id_nonce(&mut self) -> ::std::vec::Vec<u32> {
+        ::std::mem::replace(&mut self.id_nonce, ::std::vec::Vec::new())
     }
 
     // uint64 enr_seq = 4;
@@ -720,11 +730,7 @@ impl ::protobuf::Message for Log_SendWhoAreYou {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.recipient)?;
                 },
                 3 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_uint64()?;
-                    self.id_nonce = tmp;
+                    ::protobuf::rt::read_repeated_uint32_into(wire_type, is, &mut self.id_nonce)?;
                 },
                 4 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
@@ -751,9 +757,9 @@ impl ::protobuf::Message for Log_SendWhoAreYou {
         if !self.recipient.is_empty() {
             my_size += ::protobuf::rt::string_size(2, &self.recipient);
         }
-        if self.id_nonce != 0 {
-            my_size += ::protobuf::rt::value_size(3, self.id_nonce, ::protobuf::wire_format::WireTypeVarint);
-        }
+        for value in &self.id_nonce {
+            my_size += ::protobuf::rt::value_size(3, *value, ::protobuf::wire_format::WireTypeVarint);
+        };
         if self.enr_seq != 0 {
             my_size += ::protobuf::rt::value_size(4, self.enr_seq, ::protobuf::wire_format::WireTypeVarint);
         }
@@ -769,9 +775,9 @@ impl ::protobuf::Message for Log_SendWhoAreYou {
         if !self.recipient.is_empty() {
             os.write_string(2, &self.recipient)?;
         }
-        if self.id_nonce != 0 {
-            os.write_uint64(3, self.id_nonce)?;
-        }
+        for v in &self.id_nonce {
+            os.write_uint32(3, *v)?;
+        };
         if self.enr_seq != 0 {
             os.write_uint64(4, self.enr_seq)?;
         }
@@ -823,7 +829,7 @@ impl ::protobuf::Message for Log_SendWhoAreYou {
                 |m: &Log_SendWhoAreYou| { &m.recipient },
                 |m: &mut Log_SendWhoAreYou| { &mut m.recipient },
             ));
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+            fields.push(::protobuf::reflect::accessor::make_vec_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
                 "id_nonce",
                 |m: &Log_SendWhoAreYou| { &m.id_nonce },
                 |m: &mut Log_SendWhoAreYou| { &mut m.id_nonce },
@@ -851,7 +857,7 @@ impl ::protobuf::Clear for Log_SendWhoAreYou {
     fn clear(&mut self) {
         self.sender.clear();
         self.recipient.clear();
-        self.id_nonce = 0;
+        self.id_nonce.clear();
         self.enr_seq = 0;
         self.unknown_fields.clear();
     }
@@ -2299,25 +2305,24 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1a&\n\x0bNodeStarted\x12\x17\n\x07node_id\x18\x01\x20\x01(\tR\x06nodeI\
     d\x1ay\n\rSendWhoAreYou\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sende\
     r\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\trecipient\x12\x19\n\x08id_no\
-    nce\x18\x03\x20\x01(\x04R\x07idNonce\x12\x17\n\x07enr_seq\x18\x04\x20\
-    \x01(\x04R\x06enrSeq\x1a\xc2\x05\n\x13SendOrdinaryMessage\x12\x16\n\x06s\
-    ender\x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01\
-    (\tR\trecipient\x12;\n\x04ping\x18\x03\x20\x01(\x0b2%.tracing.Log.SendOr\
-    dinaryMessage.PingH\0R\x04ping\x12;\n\x04pong\x18\x04\x20\x01(\x0b2%.tra\
-    cing.Log.SendOrdinaryMessage.PongH\0R\x04pong\x12H\n\tfind_node\x18\x05\
-    \x20\x01(\x0b2).tracing.Log.SendOrdinaryMessage.FindNodeH\0R\x08findNode\
-    \x12>\n\x05nodes\x18\x06\x20\x01(\x0b2&.tracing.Log.SendOrdinaryMessage.\
-    NodesH\0R\x05nodes\x1a>\n\x04Ping\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\
-    \tR\trequestId\x12\x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x1a\
-    \x88\x01\n\x04Pong\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\
-    \x12\x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x12!\n\x0crecipien\
-    t_ip\x18\x03\x20\x01(\tR\x0brecipientIp\x12%\n\x0erecipient_port\x18\x04\
-    \x20\x01(\rR\rrecipientPort\x1aG\n\x08FindNode\x12\x1d\n\nrequest_id\x18\
-    \x01\x20\x01(\tR\trequestId\x12\x1c\n\tdistances\x18\x02\x20\x03(\rR\tdi\
-    stances\x1aR\n\x05Nodes\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\treque\
-    stId\x12\x14\n\x05total\x18\x02\x20\x01(\x05R\x05total\x12\x14\n\x05node\
-    s\x18\x03\x20\x03(\tR\x05nodesB\t\n\x07messageB\x07\n\x05eventb\x06proto\
-    3\
+    nce\x18\x03\x20\x03(\rR\x07idNonce\x12\x17\n\x07enr_seq\x18\x04\x20\x01(\
+    \x04R\x06enrSeq\x1a\xc2\x05\n\x13SendOrdinaryMessage\x12\x16\n\x06sender\
+    \x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\
+    \trecipient\x12;\n\x04ping\x18\x03\x20\x01(\x0b2%.tracing.Log.SendOrdina\
+    ryMessage.PingH\0R\x04ping\x12;\n\x04pong\x18\x04\x20\x01(\x0b2%.tracing\
+    .Log.SendOrdinaryMessage.PongH\0R\x04pong\x12H\n\tfind_node\x18\x05\x20\
+    \x01(\x0b2).tracing.Log.SendOrdinaryMessage.FindNodeH\0R\x08findNode\x12\
+    >\n\x05nodes\x18\x06\x20\x01(\x0b2&.tracing.Log.SendOrdinaryMessage.Node\
+    sH\0R\x05nodes\x1a>\n\x04Ping\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\
+    \trequestId\x12\x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x1a\x88\
+    \x01\n\x04Pong\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\
+    \x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x12!\n\x0crecipient_ip\
+    \x18\x03\x20\x01(\tR\x0brecipientIp\x12%\n\x0erecipient_port\x18\x04\x20\
+    \x01(\rR\rrecipientPort\x1aG\n\x08FindNode\x12\x1d\n\nrequest_id\x18\x01\
+    \x20\x01(\tR\trequestId\x12\x1c\n\tdistances\x18\x02\x20\x03(\rR\tdistan\
+    ces\x1aR\n\x05Nodes\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\
+    \x12\x14\n\x05total\x18\x02\x20\x01(\x05R\x05total\x12\x14\n\x05nodes\
+    \x18\x03\x20\x03(\tR\x05nodesB\t\n\x07messageB\x07\n\x05eventb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

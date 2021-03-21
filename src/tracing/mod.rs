@@ -4,7 +4,9 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log, Log_SendOrdinaryMessage_Pong};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log, Log_SendOrdinaryMessage_Pong, Log_SendWhoAreYou};
+use crate::packet::IdNonce;
+use std::convert::TryFrom;
 
 pub mod generated;
 
@@ -71,6 +73,20 @@ pub fn send_rpc_response(sender: NodeId, recipient: &NodeId, response: &Response
         }
         _ => {}
     }
+}
+
+pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, enr_seq: u64) {
+    let mut whoareyou = Log_SendWhoAreYou::new();
+    whoareyou.set_sender(format!("{}", sender));
+    whoareyou.set_recipient(format!("{}", recipient));
+    whoareyou.set_id_nonce(id_nonce.iter().map(|&n| u32::try_from(n).unwrap()).collect::<Vec<u32>>());
+    whoareyou.set_enr_seq(enr_seq);
+
+    let mut log = generated::tracing::Log::new();
+    log.set_timestamp(timestamp());
+    log.set_send_whoareyou(whoareyou);
+
+    write(log);
 }
 
 fn timestamp() -> Timestamp {

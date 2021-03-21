@@ -20,7 +20,7 @@ message Log {
   message SendWhoAreYou {
     string sender = 1;
     string recipient = 2;
-    uint64 id_nonce = 3; // TODO: uint128
+    repeated uint32 id_nonce = 3; // NOTE: 128bytes (uint8 * 16)
     uint64 enr_seq = 4;
   }
 
