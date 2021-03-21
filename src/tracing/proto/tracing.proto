@@ -35,33 +35,6 @@ message Log {
       FindNode find_node = 5;
       Nodes nodes = 6;
     }
-
-    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#ping-request-0x01
-    message Ping {
-      string request_id = 1;
-      uint64 enr_seq = 2;
-    }
-
-    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#pong-response-0x02
-    message Pong {
-      string request_id = 1;
-      uint64 enr_seq = 2;
-      string recipient_ip = 3;
-      uint32 recipient_port = 4;
-    }
-
-    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#findnode-request-0x03
-    message FindNode {
-      string request_id = 1;
-      repeated uint32 distances = 2;
-    }
-
-    // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#nodes-response-0x04
-    message Nodes {
-      string request_id = 1;
-      int32 total = 2;
-      repeated string nodes = 3;
-    }
   }
 
   // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#handshake-message-packet-flag--2
@@ -69,9 +42,42 @@ message Log {
     string sender = 1;
     string recipient = 2;
     Record record = 3;
+    oneof message {
+      Ping ping = 4;
+      Pong pong = 5;
+      FindNode find_node = 6;
+      Nodes nodes = 7;
+    }
 
     message Record {
       uint64 enr_seq = 1;
     }
   }
+}
+
+// https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#ping-request-0x01
+message Ping {
+  string request_id = 1;
+  uint64 enr_seq = 2;
+}
+
+// https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#pong-response-0x02
+message Pong {
+  string request_id = 1;
+  uint64 enr_seq = 2;
+  string recipient_ip = 3;
+  uint32 recipient_port = 4;
+}
+
+// https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#findnode-request-0x03
+message FindNode {
+  string request_id = 1;
+  repeated uint64 distances = 2;
+}
+
+// https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#nodes-response-0x04
+message Nodes {
+  string request_id = 1;
+  int32 total = 2;
+  repeated string nodes = 3;
 }

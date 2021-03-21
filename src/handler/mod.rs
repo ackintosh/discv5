@@ -648,7 +648,12 @@ impl Handler {
             .expect("All sent requests must have a node address");
 
         // TODO: conditional compilation
-        crate::tracing::send_handshake_message(&self.node_id, &node_address.node_id, &updated_enr);
+        crate::tracing::send_handshake_message(
+            &self.node_id,
+            &node_address.node_id,
+            &updated_enr,
+            &request_call.request
+        );
 
         match request_call.contact.clone() {
             NodeContact::Enr(enr) => {

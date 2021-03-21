@@ -4,7 +4,7 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log, Log_SendOrdinaryMessage_Pong, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes};
 use crate::packet::IdNonce;
 use std::convert::TryFrom;
 use crate::Enr;
@@ -12,6 +12,48 @@ use crate::Enr;
 pub mod generated;
 
 const PATH: &str = "tracing.log";
+
+enum ProtocolMessage {
+    Ping(Ping),
+    Pong(Pong),
+    FindNode(FindNode),
+    Nodes(Nodes),
+}
+
+impl From<&Request> for ProtocolMessage {
+    fn from(request: &Request) -> Self {
+        match &request.body {
+            RequestBody::Ping {enr_seq} => {
+                let mut ping = Ping::new();
+                ping.set_request_id(request.id.to_string());
+                ping.set_enr_seq(*enr_seq);
+                ProtocolMessage::Ping(ping)
+            }
+            RequestBody::FindNode {distances} => {
+                let mut find_node = FindNode::new();
+                find_node.set_request_id(request.id.to_string());
+                find_node.set_distances(distances.clone());
+                ProtocolMessage::FindNode(find_node)
+            }
+            _ => unreachable!()
+        }
+    }
+}
+
+// impl From<&Response> for ProtocolMessage {
+//     fn from(response: &Response) -> Self {
+//         match response.body {
+//             ResponseBody::Pong {enr_seq, ip, port} => {
+//                 let mut pong = Pong::new();
+//                 pong.set_request_id(response.id.to_string());
+//                 pong.set_enr_seq(enr_seq);
+//                 pong.set_recipient_ip(format!("{}", ip));
+//                 pong.set_recipient_port(port.into());
+//                 ProtocolMessage::Pong(pong)
+//             }
+//         }
+//     }
+// }
 
 pub fn clear_log() {
     if std::path::Path::new(PATH).exists() {
@@ -33,7 +75,7 @@ pub fn node_started(node_id: NodeId) {
 pub fn send_rpc_request(sender: NodeId, recipient: NodeId, request: &Request) {
     match request.body {
         RequestBody::Ping {enr_seq} => {
-            let mut ping = Log_SendOrdinaryMessage_Ping::new();
+            let mut ping = Ping::new();
             ping.set_request_id(request.id.to_string());
             ping.set_enr_seq(enr_seq);
 
@@ -55,7 +97,7 @@ pub fn send_rpc_request(sender: NodeId, recipient: NodeId, request: &Request) {
 pub fn send_rpc_response(sender: NodeId, recipient: &NodeId, response: &Response) {
     match response.body {
         ResponseBody::Pong {enr_seq, ip, port} => {
-            let mut pong = Log_SendOrdinaryMessage_Pong::new();
+            let mut pong = Pong::new();
             pong.set_request_id(response.id.to_string());
             pong.set_enr_seq(enr_seq);
             pong.set_recipient_ip(format!("{}", ip));
@@ -90,7 +132,7 @@ pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, e
     write(log);
 }
 
-pub fn send_handshake_message(sender: &NodeId, recipient: &NodeId, updated_enr: &Option<Enr>) {
+pub fn send_handshake_message(sender: &NodeId, recipient: &NodeId, updated_enr: &Option<Enr>, request: &Request) {
     let mut handshake_message = Log_SendHandshakeMessage::new();
     handshake_message.set_sender(format!("{}", sender));
     handshake_message.set_recipient(format!("{}", recipient));
@@ -98,6 +140,17 @@ pub fn send_handshake_message(sender: &NodeId, recipient: &NodeId, updated_enr: 
         let mut record = Log_SendHandshakeMessage_Record::new();
         record.set_enr_seq(enr.seq());
         handshake_message.set_record(record);
+    }
+
+    let protocol_message: ProtocolMessage = request.into();
+    match protocol_message {
+        ProtocolMessage::Ping(ping) => {
+            handshake_message.set_ping(ping);
+        }
+        ProtocolMessage::FindNode(find_node) => {
+            handshake_message.set_find_node(find_node);
+        }
+        _ => unreachable!()
     }
 
     let mut log = generated::tracing::Log::new();
