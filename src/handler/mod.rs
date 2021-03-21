@@ -614,7 +614,7 @@ impl Handler {
         let (auth_packet, mut session) = match Session::encrypt_with_header(
             &request_call.contact,
             self.key.clone(),
-            updated_enr,
+            updated_enr.clone(),
             &self.node_id,
             &challenge_data,
             &(request_call.request.clone().encode()),
@@ -646,6 +646,10 @@ impl Handler {
             .contact
             .node_address()
             .expect("All sent requests must have a node address");
+
+        // TODO: conditional compilation
+        crate::tracing::send_handshake_message(&self.node_id, &node_address.node_id, &updated_enr);
+
         match request_call.contact.clone() {
             NodeContact::Enr(enr) => {
                 // We already know the ENR. Send the handshake response packet

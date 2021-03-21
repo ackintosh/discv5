@@ -45,6 +45,7 @@ pub enum Log_oneof_event {
     node_started(Log_NodeStarted),
     send_whoareyou(Log_SendWhoAreYou),
     send_ordinary_message(Log_SendOrdinaryMessage),
+    send_handshake_message(Log_SendHandshakeMessage),
 }
 
 impl Log {
@@ -231,6 +232,55 @@ impl Log {
             Log_SendOrdinaryMessage::new()
         }
     }
+
+    // .tracing.Log.SendHandshakeMessage send_handshake_message = 5;
+
+
+    pub fn get_send_handshake_message(&self) -> &Log_SendHandshakeMessage {
+        match self.event {
+            ::std::option::Option::Some(Log_oneof_event::send_handshake_message(ref v)) => v,
+            _ => <Log_SendHandshakeMessage as ::protobuf::Message>::default_instance(),
+        }
+    }
+    pub fn clear_send_handshake_message(&mut self) {
+        self.event = ::std::option::Option::None;
+    }
+
+    pub fn has_send_handshake_message(&self) -> bool {
+        match self.event {
+            ::std::option::Option::Some(Log_oneof_event::send_handshake_message(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_send_handshake_message(&mut self, v: Log_SendHandshakeMessage) {
+        self.event = ::std::option::Option::Some(Log_oneof_event::send_handshake_message(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_send_handshake_message(&mut self) -> &mut Log_SendHandshakeMessage {
+        if let ::std::option::Option::Some(Log_oneof_event::send_handshake_message(_)) = self.event {
+        } else {
+            self.event = ::std::option::Option::Some(Log_oneof_event::send_handshake_message(Log_SendHandshakeMessage::new()));
+        }
+        match self.event {
+            ::std::option::Option::Some(Log_oneof_event::send_handshake_message(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_send_handshake_message(&mut self) -> Log_SendHandshakeMessage {
+        if self.has_send_handshake_message() {
+            match self.event.take() {
+                ::std::option::Option::Some(Log_oneof_event::send_handshake_message(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Log_SendHandshakeMessage::new()
+        }
+    }
 }
 
 impl ::protobuf::Message for Log {
@@ -251,6 +301,11 @@ impl ::protobuf::Message for Log {
             }
         }
         if let Some(Log_oneof_event::send_ordinary_message(ref v)) = self.event {
+            if !v.is_initialized() {
+                return false;
+            }
+        }
+        if let Some(Log_oneof_event::send_handshake_message(ref v)) = self.event {
             if !v.is_initialized() {
                 return false;
             }
@@ -283,6 +338,12 @@ impl ::protobuf::Message for Log {
                     }
                     self.event = ::std::option::Option::Some(Log_oneof_event::send_ordinary_message(is.read_message()?));
                 },
+                5 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.event = ::std::option::Option::Some(Log_oneof_event::send_handshake_message(is.read_message()?));
+                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -313,6 +374,10 @@ impl ::protobuf::Message for Log {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
                 },
+                &Log_oneof_event::send_handshake_message(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
             };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
@@ -340,6 +405,11 @@ impl ::protobuf::Message for Log {
                 },
                 &Log_oneof_event::send_ordinary_message(ref v) => {
                     os.write_tag(4, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+                &Log_oneof_event::send_handshake_message(ref v) => {
+                    os.write_tag(5, ::protobuf::wire_format::WireTypeLengthDelimited)?;
                     os.write_raw_varint32(v.get_cached_size())?;
                     v.write_to_with_cached_sizes(os)?;
                 },
@@ -403,6 +473,11 @@ impl ::protobuf::Message for Log {
                 Log::has_send_ordinary_message,
                 Log::get_send_ordinary_message,
             ));
+            fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Log_SendHandshakeMessage>(
+                "send_handshake_message",
+                Log::has_send_handshake_message,
+                Log::get_send_handshake_message,
+            ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<Log>(
                 "Log",
                 fields,
@@ -420,6 +495,7 @@ impl ::protobuf::Message for Log {
 impl ::protobuf::Clear for Log {
     fn clear(&mut self) {
         self.timestamp.clear();
+        self.event = ::std::option::Option::None;
         self.event = ::std::option::Option::None;
         self.event = ::std::option::Option::None;
         self.event = ::std::option::Option::None;
@@ -2294,35 +2370,452 @@ impl ::protobuf::reflect::ProtobufValue for Log_SendOrdinaryMessage_Nodes {
     }
 }
 
+#[derive(PartialEq,Clone,Default)]
+pub struct Log_SendHandshakeMessage {
+    // message fields
+    pub sender: ::std::string::String,
+    pub recipient: ::std::string::String,
+    pub record: ::protobuf::SingularPtrField<Log_SendHandshakeMessage_Record>,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a Log_SendHandshakeMessage {
+    fn default() -> &'a Log_SendHandshakeMessage {
+        <Log_SendHandshakeMessage as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Log_SendHandshakeMessage {
+    pub fn new() -> Log_SendHandshakeMessage {
+        ::std::default::Default::default()
+    }
+
+    // string sender = 1;
+
+
+    pub fn get_sender(&self) -> &str {
+        &self.sender
+    }
+    pub fn clear_sender(&mut self) {
+        self.sender.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_sender(&mut self, v: ::std::string::String) {
+        self.sender = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_sender(&mut self) -> &mut ::std::string::String {
+        &mut self.sender
+    }
+
+    // Take field
+    pub fn take_sender(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.sender, ::std::string::String::new())
+    }
+
+    // string recipient = 2;
+
+
+    pub fn get_recipient(&self) -> &str {
+        &self.recipient
+    }
+    pub fn clear_recipient(&mut self) {
+        self.recipient.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_recipient(&mut self, v: ::std::string::String) {
+        self.recipient = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_recipient(&mut self) -> &mut ::std::string::String {
+        &mut self.recipient
+    }
+
+    // Take field
+    pub fn take_recipient(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.recipient, ::std::string::String::new())
+    }
+
+    // .tracing.Log.SendHandshakeMessage.Record record = 3;
+
+
+    pub fn get_record(&self) -> &Log_SendHandshakeMessage_Record {
+        self.record.as_ref().unwrap_or_else(|| <Log_SendHandshakeMessage_Record as ::protobuf::Message>::default_instance())
+    }
+    pub fn clear_record(&mut self) {
+        self.record.clear();
+    }
+
+    pub fn has_record(&self) -> bool {
+        self.record.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_record(&mut self, v: Log_SendHandshakeMessage_Record) {
+        self.record = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_record(&mut self) -> &mut Log_SendHandshakeMessage_Record {
+        if self.record.is_none() {
+            self.record.set_default();
+        }
+        self.record.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_record(&mut self) -> Log_SendHandshakeMessage_Record {
+        self.record.take().unwrap_or_else(|| Log_SendHandshakeMessage_Record::new())
+    }
+}
+
+impl ::protobuf::Message for Log_SendHandshakeMessage {
+    fn is_initialized(&self) -> bool {
+        for v in &self.record {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.sender)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.recipient)?;
+                },
+                3 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.record)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if !self.sender.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.sender);
+        }
+        if !self.recipient.is_empty() {
+            my_size += ::protobuf::rt::string_size(2, &self.recipient);
+        }
+        if let Some(ref v) = self.record.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if !self.sender.is_empty() {
+            os.write_string(1, &self.sender)?;
+        }
+        if !self.recipient.is_empty() {
+            os.write_string(2, &self.recipient)?;
+        }
+        if let Some(ref v) = self.record.as_ref() {
+            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> Log_SendHandshakeMessage {
+        Log_SendHandshakeMessage::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let mut fields = ::std::vec::Vec::new();
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                "sender",
+                |m: &Log_SendHandshakeMessage| { &m.sender },
+                |m: &mut Log_SendHandshakeMessage| { &mut m.sender },
+            ));
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                "recipient",
+                |m: &Log_SendHandshakeMessage| { &m.recipient },
+                |m: &mut Log_SendHandshakeMessage| { &mut m.recipient },
+            ));
+            fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<Log_SendHandshakeMessage_Record>>(
+                "record",
+                |m: &Log_SendHandshakeMessage| { &m.record },
+                |m: &mut Log_SendHandshakeMessage| { &mut m.record },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Log_SendHandshakeMessage>(
+                "Log.SendHandshakeMessage",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static Log_SendHandshakeMessage {
+        static instance: ::protobuf::rt::LazyV2<Log_SendHandshakeMessage> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(Log_SendHandshakeMessage::new)
+    }
+}
+
+impl ::protobuf::Clear for Log_SendHandshakeMessage {
+    fn clear(&mut self) {
+        self.sender.clear();
+        self.recipient.clear();
+        self.record.clear();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for Log_SendHandshakeMessage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Log_SendHandshakeMessage {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct Log_SendHandshakeMessage_Record {
+    // message fields
+    pub enr_seq: u64,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a Log_SendHandshakeMessage_Record {
+    fn default() -> &'a Log_SendHandshakeMessage_Record {
+        <Log_SendHandshakeMessage_Record as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Log_SendHandshakeMessage_Record {
+    pub fn new() -> Log_SendHandshakeMessage_Record {
+        ::std::default::Default::default()
+    }
+
+    // uint64 enr_seq = 1;
+
+
+    pub fn get_enr_seq(&self) -> u64 {
+        self.enr_seq
+    }
+    pub fn clear_enr_seq(&mut self) {
+        self.enr_seq = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_enr_seq(&mut self, v: u64) {
+        self.enr_seq = v;
+    }
+}
+
+impl ::protobuf::Message for Log_SendHandshakeMessage_Record {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.enr_seq = tmp;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if self.enr_seq != 0 {
+            my_size += ::protobuf::rt::value_size(1, self.enr_seq, ::protobuf::wire_format::WireTypeVarint);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if self.enr_seq != 0 {
+            os.write_uint64(1, self.enr_seq)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> Log_SendHandshakeMessage_Record {
+        Log_SendHandshakeMessage_Record::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let mut fields = ::std::vec::Vec::new();
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                "enr_seq",
+                |m: &Log_SendHandshakeMessage_Record| { &m.enr_seq },
+                |m: &mut Log_SendHandshakeMessage_Record| { &mut m.enr_seq },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Log_SendHandshakeMessage_Record>(
+                "Log.SendHandshakeMessage.Record",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static Log_SendHandshakeMessage_Record {
+        static instance: ::protobuf::rt::LazyV2<Log_SendHandshakeMessage_Record> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(Log_SendHandshakeMessage_Record::new)
+    }
+}
+
+impl ::protobuf::Clear for Log_SendHandshakeMessage_Record {
+    fn clear(&mut self) {
+        self.enr_seq = 0;
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for Log_SendHandshakeMessage_Record {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Log_SendHandshakeMessage_Record {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1fsrc/tracing/proto/tracing.proto\x12\x07tracing\x1a\x1fgoogle/proto\
-    buf/timestamp.proto\"\x8c\t\n\x03Log\x128\n\ttimestamp\x18\x01\x20\x01(\
-    \x0b2\x1a.google.protobuf.TimestampR\ttimestamp\x12=\n\x0cnode_started\
+    buf/timestamp.proto\"\x9b\x0b\n\x03Log\x128\n\ttimestamp\x18\x01\x20\x01\
+    (\x0b2\x1a.google.protobuf.TimestampR\ttimestamp\x12=\n\x0cnode_started\
     \x18\x02\x20\x01(\x0b2\x18.tracing.Log.NodeStartedH\0R\x0bnodeStarted\
     \x12C\n\x0esend_whoareyou\x18\x03\x20\x01(\x0b2\x1a.tracing.Log.SendWhoA\
     reYouH\0R\rsendWhoareyou\x12V\n\x15send_ordinary_message\x18\x04\x20\x01\
     (\x0b2\x20.tracing.Log.SendOrdinaryMessageH\0R\x13sendOrdinaryMessage\
-    \x1a&\n\x0bNodeStarted\x12\x17\n\x07node_id\x18\x01\x20\x01(\tR\x06nodeI\
-    d\x1ay\n\rSendWhoAreYou\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sende\
-    r\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\trecipient\x12\x19\n\x08id_no\
-    nce\x18\x03\x20\x03(\rR\x07idNonce\x12\x17\n\x07enr_seq\x18\x04\x20\x01(\
-    \x04R\x06enrSeq\x1a\xc2\x05\n\x13SendOrdinaryMessage\x12\x16\n\x06sender\
-    \x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\
-    \trecipient\x12;\n\x04ping\x18\x03\x20\x01(\x0b2%.tracing.Log.SendOrdina\
-    ryMessage.PingH\0R\x04ping\x12;\n\x04pong\x18\x04\x20\x01(\x0b2%.tracing\
-    .Log.SendOrdinaryMessage.PongH\0R\x04pong\x12H\n\tfind_node\x18\x05\x20\
-    \x01(\x0b2).tracing.Log.SendOrdinaryMessage.FindNodeH\0R\x08findNode\x12\
-    >\n\x05nodes\x18\x06\x20\x01(\x0b2&.tracing.Log.SendOrdinaryMessage.Node\
-    sH\0R\x05nodes\x1a>\n\x04Ping\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\
-    \trequestId\x12\x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x1a\x88\
-    \x01\n\x04Pong\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\
-    \x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x12!\n\x0crecipient_ip\
-    \x18\x03\x20\x01(\tR\x0brecipientIp\x12%\n\x0erecipient_port\x18\x04\x20\
-    \x01(\rR\rrecipientPort\x1aG\n\x08FindNode\x12\x1d\n\nrequest_id\x18\x01\
-    \x20\x01(\tR\trequestId\x12\x1c\n\tdistances\x18\x02\x20\x03(\rR\tdistan\
-    ces\x1aR\n\x05Nodes\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\
-    \x12\x14\n\x05total\x18\x02\x20\x01(\x05R\x05total\x12\x14\n\x05nodes\
-    \x18\x03\x20\x03(\tR\x05nodesB\t\n\x07messageB\x07\n\x05eventb\x06proto3\
+    \x12Y\n\x16send_handshake_message\x18\x05\x20\x01(\x0b2!.tracing.Log.Sen\
+    dHandshakeMessageH\0R\x14sendHandshakeMessage\x1a&\n\x0bNodeStarted\x12\
+    \x17\n\x07node_id\x18\x01\x20\x01(\tR\x06nodeId\x1ay\n\rSendWhoAreYou\
+    \x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\
+    \x18\x02\x20\x01(\tR\trecipient\x12\x19\n\x08id_nonce\x18\x03\x20\x03(\r\
+    R\x07idNonce\x12\x17\n\x07enr_seq\x18\x04\x20\x01(\x04R\x06enrSeq\x1a\
+    \xc2\x05\n\x13SendOrdinaryMessage\x12\x16\n\x06sender\x18\x01\x20\x01(\t\
+    R\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\trecipient\x12;\n\
+    \x04ping\x18\x03\x20\x01(\x0b2%.tracing.Log.SendOrdinaryMessage.PingH\0R\
+    \x04ping\x12;\n\x04pong\x18\x04\x20\x01(\x0b2%.tracing.Log.SendOrdinaryM\
+    essage.PongH\0R\x04pong\x12H\n\tfind_node\x18\x05\x20\x01(\x0b2).tracing\
+    .Log.SendOrdinaryMessage.FindNodeH\0R\x08findNode\x12>\n\x05nodes\x18\
+    \x06\x20\x01(\x0b2&.tracing.Log.SendOrdinaryMessage.NodesH\0R\x05nodes\
+    \x1a>\n\x04Ping\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\
+    \x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\x1a\x88\x01\n\x04Pong\
+    \x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\x17\n\x07enr_s\
+    eq\x18\x02\x20\x01(\x04R\x06enrSeq\x12!\n\x0crecipient_ip\x18\x03\x20\
+    \x01(\tR\x0brecipientIp\x12%\n\x0erecipient_port\x18\x04\x20\x01(\rR\rre\
+    cipientPort\x1aG\n\x08FindNode\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\
+    \trequestId\x12\x1c\n\tdistances\x18\x02\x20\x03(\rR\tdistances\x1aR\n\
+    \x05Nodes\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\x14\n\
+    \x05total\x18\x02\x20\x01(\x05R\x05total\x12\x14\n\x05nodes\x18\x03\x20\
+    \x03(\tR\x05nodesB\t\n\x07message\x1a\xb1\x01\n\x14SendHandshakeMessage\
+    \x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\
+    \x18\x02\x20\x01(\tR\trecipient\x12@\n\x06record\x18\x03\x20\x01(\x0b2(.\
+    tracing.Log.SendHandshakeMessage.RecordR\x06record\x1a!\n\x06Record\x12\
+    \x17\n\x07enr_seq\x18\x01\x20\x01(\x04R\x06enrSeqB\x07\n\x05eventb\x06pr\
+    oto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

@@ -4,9 +4,10 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log, Log_SendOrdinaryMessage_Pong, Log_SendWhoAreYou};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log, Log_SendOrdinaryMessage_Pong, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record};
 use crate::packet::IdNonce;
 use std::convert::TryFrom;
+use crate::Enr;
 
 pub mod generated;
 
@@ -85,6 +86,23 @@ pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, e
     let mut log = generated::tracing::Log::new();
     log.set_timestamp(timestamp());
     log.set_send_whoareyou(whoareyou);
+
+    write(log);
+}
+
+pub fn send_handshake_message(sender: &NodeId, recipient: &NodeId, updated_enr: &Option<Enr>) {
+    let mut handshake_message = Log_SendHandshakeMessage::new();
+    handshake_message.set_sender(format!("{}", sender));
+    handshake_message.set_recipient(format!("{}", recipient));
+    if let Some(enr) = updated_enr {
+        let mut record = Log_SendHandshakeMessage_Record::new();
+        record.set_enr_seq(enr.seq());
+        handshake_message.set_record(record);
+    }
+
+    let mut log = generated::tracing::Log::new();
+    log.set_timestamp(timestamp());
+    log.set_send_handshake_message(handshake_message);
 
     write(log);
 }
