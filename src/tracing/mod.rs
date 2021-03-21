@@ -3,8 +3,8 @@ use protobuf::Message;
 use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
-use crate::rpc::{Request, RequestBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log};
+use crate::rpc::{Request, RequestBody, Response, ResponseBody};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage_Ping, Log_SendOrdinaryMessage, Log, Log_SendOrdinaryMessage_Pong};
 
 pub mod generated;
 
@@ -47,6 +47,30 @@ pub fn send_rpc_request(sender: NodeId, recipient: NodeId, request: &Request) {
         }
         _ => {}
     };
+}
+
+pub fn send_rpc_response(sender: NodeId, recipient: &NodeId, response: &Response) {
+    match response.body {
+        ResponseBody::Pong {enr_seq, ip, port} => {
+            let mut pong = Log_SendOrdinaryMessage_Pong::new();
+            pong.set_request_id(response.id.to_string());
+            pong.set_enr_seq(enr_seq);
+            pong.set_recipient_ip(format!("{}", ip));
+            pong.set_recipient_port(port.into());
+
+            let mut send_ordinary_message = Log_SendOrdinaryMessage::new();
+            send_ordinary_message.set_sender(format!("{}", sender));
+            send_ordinary_message.set_recipient(format!("{}", recipient));
+            send_ordinary_message.set_pong(pong);
+
+            let mut log = generated::tracing::Log::new();
+            log.set_timestamp(timestamp());
+            log.set_send_ordinary_message(send_ordinary_message);
+
+            write(log);
+        }
+        _ => {}
+    }
 }
 
 fn timestamp() -> Timestamp {

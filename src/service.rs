@@ -446,6 +446,14 @@ impl Service {
                     },
                 };
                 debug!("Sending PONG response to {}", node_address);
+
+                // TODO: conditional compilation
+                crate::tracing::send_rpc_response(
+                    self.local_enr.read().node_id(),
+                    &node_address.node_id,
+                    &response
+                );
+
                 let _ = self
                     .handler_send
                     .send(HandlerRequest::Response(node_address, Box::new(response)));
