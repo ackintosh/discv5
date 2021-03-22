@@ -1,5 +1,5 @@
 use enr::NodeId;
-use protobuf::Message;
+use protobuf::{Message, RepeatedField};
 use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
@@ -40,20 +40,31 @@ impl From<&Request> for ProtocolMessage {
     }
 }
 
-// impl From<&Response> for ProtocolMessage {
-//     fn from(response: &Response) -> Self {
-//         match response.body {
-//             ResponseBody::Pong {enr_seq, ip, port} => {
-//                 let mut pong = Pong::new();
-//                 pong.set_request_id(response.id.to_string());
-//                 pong.set_enr_seq(enr_seq);
-//                 pong.set_recipient_ip(format!("{}", ip));
-//                 pong.set_recipient_port(port.into());
-//                 ProtocolMessage::Pong(pong)
-//             }
-//         }
-//     }
-// }
+impl From<&Response> for ProtocolMessage {
+    fn from(response: &Response) -> Self {
+        match &response.body {
+            ResponseBody::Pong {enr_seq, ip, port} => {
+                let mut pong = Pong::new();
+                pong.set_request_id(response.id.to_string());
+                pong.set_enr_seq(*enr_seq);
+                pong.set_recipient_ip(format!("{}", ip));
+                pong.set_recipient_port(u32::try_from(*port).unwrap());
+                ProtocolMessage::Pong(pong)
+            }
+            ResponseBody::Nodes {total, nodes} => {
+                let mut nodes_message = Nodes::new();
+                nodes_message.set_request_id(response.id.to_string());
+                nodes_message.set_total(*total);
+                let node_ids = nodes.iter()
+                    .map(|n| format!("{}", n.node_id()))
+                    .collect::<Vec<String>>();
+                nodes_message.set_nodes(RepeatedField::from_vec(node_ids));
+                ProtocolMessage::Nodes(nodes_message)
+            }
+            _ => unreachable!()
+        }
+    }
+}
 
 pub fn clear_log() {
     if std::path::Path::new(PATH).exists() {
@@ -86,49 +97,49 @@ pub fn send_random_packet(sender: &NodeId, recipient: &NodeId) {
 }
 
 pub fn send_rpc_request(sender: &NodeId, recipient: &NodeId, request: &Request) {
-    match request.body {
-        RequestBody::Ping {enr_seq} => {
-            let mut ping = Ping::new();
-            ping.set_request_id(request.id.to_string());
-            ping.set_enr_seq(enr_seq);
+    let mut send_ordinary_message = Log_SendOrdinaryMessage::new();
+    send_ordinary_message.set_sender(format!("{}", sender));
+    send_ordinary_message.set_recipient(format!("{}", recipient));
 
-            let mut send_ordinary_message = Log_SendOrdinaryMessage::new();
-            send_ordinary_message.set_sender(format!("{}", sender));
-            send_ordinary_message.set_recipient(format!("{}", recipient));
+    let protocol_message: ProtocolMessage = request.into();
+    match protocol_message {
+        ProtocolMessage::Ping(ping) => {
             send_ordinary_message.set_ping(ping);
-
-            let mut log = generated::tracing::Log::new();
-            log.set_timestamp(timestamp());
-            log.set_send_ordinary_message(send_ordinary_message);
-
-            write(log);
         }
-        _ => {}
-    };
+        ProtocolMessage::FindNode(find_node) => {
+            send_ordinary_message.set_find_node(find_node);
+        }
+        _ => unreachable!()
+    }
+
+    let mut log = generated::tracing::Log::new();
+    log.set_timestamp(timestamp());
+    log.set_send_ordinary_message(send_ordinary_message);
+
+    write(log);
 }
 
 pub fn send_rpc_response(sender: &NodeId, recipient: &NodeId, response: &Response) {
-    match response.body {
-        ResponseBody::Pong {enr_seq, ip, port} => {
-            let mut pong = Pong::new();
-            pong.set_request_id(response.id.to_string());
-            pong.set_enr_seq(enr_seq);
-            pong.set_recipient_ip(format!("{}", ip));
-            pong.set_recipient_port(port.into());
+    let mut send_ordinary_message = Log_SendOrdinaryMessage::new();
+    send_ordinary_message.set_sender(format!("{}", sender));
+    send_ordinary_message.set_recipient(format!("{}", recipient));
 
-            let mut send_ordinary_message = Log_SendOrdinaryMessage::new();
-            send_ordinary_message.set_sender(format!("{}", sender));
-            send_ordinary_message.set_recipient(format!("{}", recipient));
+    let protocol_message: ProtocolMessage = response.into();
+    match protocol_message {
+        ProtocolMessage::Pong(pong) => {
             send_ordinary_message.set_pong(pong);
-
-            let mut log = generated::tracing::Log::new();
-            log.set_timestamp(timestamp());
-            log.set_send_ordinary_message(send_ordinary_message);
-
-            write(log);
         }
-        _ => {}
+        ProtocolMessage::Nodes(nodes) => {
+            send_ordinary_message.set_nodes(nodes);
+        }
+        _ => unreachable!()
     }
+
+    let mut log = generated::tracing::Log::new();
+    log.set_timestamp(timestamp());
+    log.set_send_ordinary_message(send_ordinary_message);
+
+    write(log);
 }
 
 pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, enr_seq: u64) {

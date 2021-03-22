@@ -3059,7 +3059,7 @@ impl ::protobuf::reflect::ProtobufValue for FindNode {
 pub struct Nodes {
     // message fields
     pub request_id: ::std::string::String,
-    pub total: i32,
+    pub total: u64,
     pub nodes: ::protobuf::RepeatedField<::std::string::String>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
@@ -3103,10 +3103,10 @@ impl Nodes {
         ::std::mem::replace(&mut self.request_id, ::std::string::String::new())
     }
 
-    // int32 total = 2;
+    // uint64 total = 2;
 
 
-    pub fn get_total(&self) -> i32 {
+    pub fn get_total(&self) -> u64 {
         self.total
     }
     pub fn clear_total(&mut self) {
@@ -3114,7 +3114,7 @@ impl Nodes {
     }
 
     // Param is passed by value, moved
-    pub fn set_total(&mut self, v: i32) {
+    pub fn set_total(&mut self, v: u64) {
         self.total = v;
     }
 
@@ -3160,7 +3160,7 @@ impl ::protobuf::Message for Nodes {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
-                    let tmp = is.read_int32()?;
+                    let tmp = is.read_uint64()?;
                     self.total = tmp;
                 },
                 3 => {
@@ -3197,7 +3197,7 @@ impl ::protobuf::Message for Nodes {
             os.write_string(1, &self.request_id)?;
         }
         if self.total != 0 {
-            os.write_int32(2, self.total)?;
+            os.write_uint64(2, self.total)?;
         }
         for v in &self.nodes {
             os.write_string(3, &v)?;
@@ -3245,7 +3245,7 @@ impl ::protobuf::Message for Nodes {
                 |m: &Nodes| { &m.request_id },
                 |m: &mut Nodes| { &mut m.request_id },
             ));
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt32>(
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
                 "total",
                 |m: &Nodes| { &m.total },
                 |m: &mut Nodes| { &mut m.total },
@@ -3328,7 +3328,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ndNode\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\x1c\n\td\
     istances\x18\x02\x20\x03(\x04R\tdistances\"R\n\x05Nodes\x12\x1d\n\nreque\
     st_id\x18\x01\x20\x01(\tR\trequestId\x12\x14\n\x05total\x18\x02\x20\x01(\
-    \x05R\x05total\x12\x14\n\x05nodes\x18\x03\x20\x03(\tR\x05nodesb\x06proto\
+    \x04R\x05total\x12\x14\n\x05nodes\x18\x03\x20\x03(\tR\x05nodesb\x06proto\
     3\
 ";
 
