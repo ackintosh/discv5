@@ -447,13 +447,6 @@ impl Service {
                 };
                 debug!("Sending PONG response to {}", node_address);
 
-                // TODO: conditional compilation
-                crate::tracing::send_rpc_response(
-                    self.local_enr.read().node_id(),
-                    &node_address.node_id,
-                    &response
-                );
-
                 let _ = self
                     .handler_send
                     .send(HandlerRequest::Response(node_address, Box::new(response)));
@@ -935,13 +928,6 @@ impl Service {
         let contact = active_request.contact.clone();
         self.active_requests.insert(id, active_request);
         debug!("Sending RPC {} to node: {}", request, contact);
-
-        // TODO: conditional compilation
-        crate::tracing::send_rpc_request(
-            self.local_enr.read().node_id(),
-            contact.node_id(),
-            &request
-        );
 
         let _ = self
             .handler_send

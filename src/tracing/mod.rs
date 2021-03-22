@@ -72,7 +72,7 @@ pub fn node_started(node_id: NodeId) {
     write(log);
 }
 
-pub fn send_rpc_request(sender: NodeId, recipient: NodeId, request: &Request) {
+pub fn send_rpc_request(sender: &NodeId, recipient: &NodeId, request: &Request) {
     match request.body {
         RequestBody::Ping {enr_seq} => {
             let mut ping = Ping::new();
@@ -94,7 +94,7 @@ pub fn send_rpc_request(sender: NodeId, recipient: NodeId, request: &Request) {
     };
 }
 
-pub fn send_rpc_response(sender: NodeId, recipient: &NodeId, response: &Response) {
+pub fn send_rpc_response(sender: &NodeId, recipient: &NodeId, response: &Response) {
     match response.body {
         ResponseBody::Pong {enr_seq, ip, port} => {
             let mut pong = Pong::new();

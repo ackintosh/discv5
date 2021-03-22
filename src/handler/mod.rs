@@ -436,9 +436,18 @@ impl Handler {
         let packet = {
             if let Some(session) = self.sessions.get_mut(&node_address) {
                 // Encrypt the message and send
-                session
+                let packet = session
                     .encrypt_message(self.node_id, &request.clone().encode())
-                    .map_err(|e| RequestError::EncryptionFailed(format!("{:?}", e)))?
+                    .map_err(|e| RequestError::EncryptionFailed(format!("{:?}", e)))?;
+
+                // TODO: conditional compilation
+                crate::tracing::send_rpc_request(
+                    &self.node_id,
+                    &node_address.node_id,
+                    &request
+                );
+
+                packet
             } else {
                 // No session exists, start a new handshake
                 trace!(
@@ -466,13 +475,21 @@ impl Handler {
         // Check for an established session
         if let Some(session) = self.sessions.get_mut(&node_address) {
             // Encrypt the message and send
-            let packet = match session.encrypt_message(self.node_id, &response.encode()) {
+            let packet = match session.encrypt_message(self.node_id, &response.clone().encode()) {
                 Ok(packet) => packet,
                 Err(e) => {
                     warn!("Could not encrypt response: {:?}", e);
                     return;
                 }
             };
+
+            // TODO: conditional compilation
+            crate::tracing::send_rpc_response(
+                &self.node_id,
+                &node_address.node_id,
+                &response
+            );
+
             self.send(node_address, packet).await;
         } else {
             // Either the session is being established or has expired. We simply drop the
