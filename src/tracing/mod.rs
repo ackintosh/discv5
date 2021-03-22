@@ -4,7 +4,7 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random};
 use crate::packet::IdNonce;
 use std::convert::TryFrom;
 use crate::Enr;
@@ -68,6 +68,19 @@ pub fn node_started(node_id: NodeId) {
     let mut log = generated::tracing::Log::new();
     log.set_timestamp(timestamp());
     log.set_node_started(node_started);
+
+    write(log);
+}
+
+pub fn send_random_packet(sender: &NodeId, recipient: &NodeId) {
+    let mut send_ordinary_message = Log_SendOrdinaryMessage::new();
+    send_ordinary_message.set_sender(format!("{}", sender));
+    send_ordinary_message.set_recipient(format!("{}", recipient));
+    send_ordinary_message.set_random(Random::new());
+
+    let mut log = generated::tracing::Log::new();
+    log.set_timestamp(timestamp());
+    log.set_send_ordinary_message(send_ordinary_message);
 
     write(log);
 }

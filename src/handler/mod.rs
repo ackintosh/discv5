@@ -454,6 +454,13 @@ impl Handler {
                     "Starting session. Sending random packet to: {}",
                     node_address
                 );
+
+                // TODO: conditional compilation
+                crate::tracing::send_random_packet(
+                    &self.node_id,
+                    &node_address.node_id
+                );
+
                 Packet::new_random(&self.node_id).map_err(|e| RequestError::EntropyFailure(e))?
             }
         };

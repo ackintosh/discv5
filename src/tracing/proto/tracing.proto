@@ -30,10 +30,11 @@ message Log {
     string sender = 1;
     string recipient = 2;
     oneof message {
-      Ping ping = 3;
-      Pong pong = 4;
-      FindNode find_node = 5;
-      Nodes nodes = 6;
+      Random random = 3;
+      Ping ping = 4;
+      Pong pong = 5;
+      FindNode find_node = 6;
+      Nodes nodes = 7;
     }
   }
 
@@ -54,6 +55,9 @@ message Log {
     }
   }
 }
+
+// https://github.com/ethereum/devp2p/blob/master/discv5/discv5-theory.md#step-1-node-a-sends-message-packet
+message Random {}
 
 // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#ping-request-0x01
 message Ping {
