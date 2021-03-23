@@ -13,34 +13,39 @@ pub mod generated;
 
 const PATH: &str = "tracing.log";
 
-enum ProtocolMessage {
+enum ProtocolMessageRequest {
     Ping(Ping),
-    Pong(Pong),
     FindNode(FindNode),
+}
+
+enum ProtocolMessageResponse {
+    Pong(Pong),
     Nodes(Nodes),
 }
 
-impl From<&Request> for ProtocolMessage {
+impl From<&Request> for ProtocolMessageRequest {
     fn from(request: &Request) -> Self {
         match &request.body {
             RequestBody::Ping {enr_seq} => {
                 let mut ping = Ping::new();
                 ping.set_request_id(request.id.to_string());
                 ping.set_enr_seq(*enr_seq);
-                ProtocolMessage::Ping(ping)
+                ProtocolMessageRequest::Ping(ping)
             }
             RequestBody::FindNode {distances} => {
                 let mut find_node = FindNode::new();
                 find_node.set_request_id(request.id.to_string());
                 find_node.set_distances(distances.clone());
-                ProtocolMessage::FindNode(find_node)
+                ProtocolMessageRequest::FindNode(find_node)
             }
-            _ => unreachable!()
+            RequestBody::Talk { protocol, request } => todo!(),
+            RequestBody::RegisterTopic { topic, enr, ticket} => todo!(),
+            RequestBody::TopicQuery { topic } => todo!(),
         }
     }
 }
 
-impl From<&Response> for ProtocolMessage {
+impl From<&Response> for ProtocolMessageResponse {
     fn from(response: &Response) -> Self {
         match &response.body {
             ResponseBody::Pong {enr_seq, ip, port} => {
@@ -49,7 +54,7 @@ impl From<&Response> for ProtocolMessage {
                 pong.set_enr_seq(*enr_seq);
                 pong.set_recipient_ip(format!("{}", ip));
                 pong.set_recipient_port(u32::try_from(*port).unwrap());
-                ProtocolMessage::Pong(pong)
+                ProtocolMessageResponse::Pong(pong)
             }
             ResponseBody::Nodes {total, nodes} => {
                 let mut nodes_message = Nodes::new();
@@ -59,9 +64,11 @@ impl From<&Response> for ProtocolMessage {
                     .map(|n| format!("{}", n.node_id()))
                     .collect::<Vec<String>>();
                 nodes_message.set_nodes(RepeatedField::from_vec(node_ids));
-                ProtocolMessage::Nodes(nodes_message)
+                ProtocolMessageResponse::Nodes(nodes_message)
             }
-            _ => unreachable!()
+            ResponseBody::Talk { response } => todo!(),
+            ResponseBody::Ticket { ticket, wait_time } => todo!(),
+            ResponseBody::RegisterConfirmation { topic } => todo!(),
         }
     }
 }
@@ -101,15 +108,14 @@ pub fn send_rpc_request(sender: &NodeId, recipient: &NodeId, request: &Request) 
     send_ordinary_message.set_sender(format!("{}", sender));
     send_ordinary_message.set_recipient(format!("{}", recipient));
 
-    let protocol_message: ProtocolMessage = request.into();
+    let protocol_message: ProtocolMessageRequest = request.into();
     match protocol_message {
-        ProtocolMessage::Ping(ping) => {
+        ProtocolMessageRequest::Ping(ping) => {
             send_ordinary_message.set_ping(ping);
         }
-        ProtocolMessage::FindNode(find_node) => {
+        ProtocolMessageRequest::FindNode(find_node) => {
             send_ordinary_message.set_find_node(find_node);
         }
-        _ => unreachable!()
     }
 
     let mut log = generated::tracing::Log::new();
@@ -124,15 +130,14 @@ pub fn send_rpc_response(sender: &NodeId, recipient: &NodeId, response: &Respons
     send_ordinary_message.set_sender(format!("{}", sender));
     send_ordinary_message.set_recipient(format!("{}", recipient));
 
-    let protocol_message: ProtocolMessage = response.into();
+    let protocol_message: ProtocolMessageResponse = response.into();
     match protocol_message {
-        ProtocolMessage::Pong(pong) => {
+        ProtocolMessageResponse::Pong(pong) => {
             send_ordinary_message.set_pong(pong);
         }
-        ProtocolMessage::Nodes(nodes) => {
+        ProtocolMessageResponse::Nodes(nodes) => {
             send_ordinary_message.set_nodes(nodes);
         }
-        _ => unreachable!()
     }
 
     let mut log = generated::tracing::Log::new();
@@ -166,15 +171,14 @@ pub fn send_handshake_message(sender: &NodeId, recipient: &NodeId, updated_enr: 
         handshake_message.set_record(record);
     }
 
-    let protocol_message: ProtocolMessage = request.into();
+    let protocol_message: ProtocolMessageRequest = request.into();
     match protocol_message {
-        ProtocolMessage::Ping(ping) => {
+        ProtocolMessageRequest::Ping(ping) => {
             handshake_message.set_ping(ping);
         }
-        ProtocolMessage::FindNode(find_node) => {
+        ProtocolMessageRequest::FindNode(find_node) => {
             handshake_message.set_find_node(find_node);
         }
-        _ => unreachable!()
     }
 
     let mut log = generated::tracing::Log::new();
