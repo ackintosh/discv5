@@ -7,13 +7,18 @@ package tracing;
 message Log {
   google.protobuf.Timestamp timestamp = 1;
   oneof event {
-    NodeStarted node_started = 2;
-    SendWhoAreYou send_whoareyou = 3;
-    SendOrdinaryMessage send_ordinary_message = 4;
-    SendHandshakeMessage send_handshake_message = 5;
+    Start start = 2;
+    Shutdown shutdown = 3;
+    SendWhoAreYou send_whoareyou = 4;
+    SendOrdinaryMessage send_ordinary_message = 5;
+    SendHandshakeMessage send_handshake_message = 6;
   }
 
-  message NodeStarted {
+  message Start {
+    string node_id = 1;
+  }
+
+  message Shutdown {
     string node_id = 1;
   }
 

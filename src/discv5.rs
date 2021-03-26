@@ -129,7 +129,7 @@ impl Discv5 {
         self.service_channel = Some(service_channel);
 
         // TODO: conditional compilation
-        crate::tracing::node_started(self.local_enr.read().node_id());
+        crate::tracing::start(self.local_enr.read().node_id());
 
         Ok(())
     }
@@ -137,6 +137,9 @@ impl Discv5 {
     /// Terminates the service.
     pub fn shutdown(&mut self) {
         if let Some(exit) = self.service_exit.take() {
+            // TODO: conditional compilation
+            crate::tracing::shutdown(self.local_enr.read().node_id());
+
             if exit.send(()).is_err() {
                 debug!("Discv5 service already shutdown");
             }

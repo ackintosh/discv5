@@ -4,7 +4,7 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random, Log_Shutdown, Log_Start};
 use crate::packet::IdNonce;
 use std::convert::TryFrom;
 use crate::Enr;
@@ -79,13 +79,23 @@ pub fn clear_log() {
     }
 }
 
-pub fn node_started(node_id: NodeId) {
-    let mut node_started = generated::tracing::Log_NodeStarted::new();
-    node_started.set_node_id(format!("{}", node_id));
+pub fn start(node_id: NodeId) {
+    let mut start = Log_Start::new();
+    start.set_node_id(format!("{}", node_id));
 
-    let mut log = generated::tracing::Log::new();
+    let mut log = Log::new();
     log.set_timestamp(timestamp());
-    log.set_node_started(node_started);
+    log.set_start(start);
+
+    write(log);
+}
+
+pub fn shutdown(node_id: NodeId) {
+    let mut shutdown = Log_Shutdown::new();
+    shutdown.set_node_id(format!("{}", node_id));
+
+    let mut log = Log::new();
+    log.set_shutdown(shutdown);
 
     write(log);
 }
@@ -118,7 +128,7 @@ pub fn send_rpc_request(sender: &NodeId, recipient: &NodeId, request: &Request) 
         }
     }
 
-    let mut log = generated::tracing::Log::new();
+    let mut log = Log::new();
     log.set_timestamp(timestamp());
     log.set_send_ordinary_message(send_ordinary_message);
 
@@ -140,7 +150,7 @@ pub fn send_rpc_response(sender: &NodeId, recipient: &NodeId, response: &Respons
         }
     }
 
-    let mut log = generated::tracing::Log::new();
+    let mut log = Log::new();
     log.set_timestamp(timestamp());
     log.set_send_ordinary_message(send_ordinary_message);
 
@@ -154,7 +164,7 @@ pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, e
     whoareyou.set_id_nonce(id_nonce.iter().map(|&n| u32::try_from(n).unwrap()).collect::<Vec<u32>>());
     whoareyou.set_enr_seq(enr_seq);
 
-    let mut log = generated::tracing::Log::new();
+    let mut log = Log::new();
     log.set_timestamp(timestamp());
     log.set_send_whoareyou(whoareyou);
 
@@ -181,7 +191,7 @@ pub fn send_handshake_message(sender: &NodeId, recipient: &NodeId, updated_enr: 
         }
     }
 
-    let mut log = generated::tracing::Log::new();
+    let mut log = Log::new();
     log.set_timestamp(timestamp());
     log.set_send_handshake_message(handshake_message);
 

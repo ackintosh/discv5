@@ -42,7 +42,8 @@ impl<'a> ::std::default::Default for &'a Log {
 
 #[derive(Clone,PartialEq,Debug)]
 pub enum Log_oneof_event {
-    node_started(Log_NodeStarted),
+    start(Log_Start),
+    shutdown(Log_Shutdown),
     send_whoareyou(Log_SendWhoAreYou),
     send_ordinary_message(Log_SendOrdinaryMessage),
     send_handshake_message(Log_SendHandshakeMessage),
@@ -86,56 +87,105 @@ impl Log {
         self.timestamp.take().unwrap_or_else(|| ::protobuf::well_known_types::Timestamp::new())
     }
 
-    // .tracing.Log.NodeStarted node_started = 2;
+    // .tracing.Log.Start start = 2;
 
 
-    pub fn get_node_started(&self) -> &Log_NodeStarted {
+    pub fn get_start(&self) -> &Log_Start {
         match self.event {
-            ::std::option::Option::Some(Log_oneof_event::node_started(ref v)) => v,
-            _ => <Log_NodeStarted as ::protobuf::Message>::default_instance(),
+            ::std::option::Option::Some(Log_oneof_event::start(ref v)) => v,
+            _ => <Log_Start as ::protobuf::Message>::default_instance(),
         }
     }
-    pub fn clear_node_started(&mut self) {
+    pub fn clear_start(&mut self) {
         self.event = ::std::option::Option::None;
     }
 
-    pub fn has_node_started(&self) -> bool {
+    pub fn has_start(&self) -> bool {
         match self.event {
-            ::std::option::Option::Some(Log_oneof_event::node_started(..)) => true,
+            ::std::option::Option::Some(Log_oneof_event::start(..)) => true,
             _ => false,
         }
     }
 
     // Param is passed by value, moved
-    pub fn set_node_started(&mut self, v: Log_NodeStarted) {
-        self.event = ::std::option::Option::Some(Log_oneof_event::node_started(v))
+    pub fn set_start(&mut self, v: Log_Start) {
+        self.event = ::std::option::Option::Some(Log_oneof_event::start(v))
     }
 
     // Mutable pointer to the field.
-    pub fn mut_node_started(&mut self) -> &mut Log_NodeStarted {
-        if let ::std::option::Option::Some(Log_oneof_event::node_started(_)) = self.event {
+    pub fn mut_start(&mut self) -> &mut Log_Start {
+        if let ::std::option::Option::Some(Log_oneof_event::start(_)) = self.event {
         } else {
-            self.event = ::std::option::Option::Some(Log_oneof_event::node_started(Log_NodeStarted::new()));
+            self.event = ::std::option::Option::Some(Log_oneof_event::start(Log_Start::new()));
         }
         match self.event {
-            ::std::option::Option::Some(Log_oneof_event::node_started(ref mut v)) => v,
+            ::std::option::Option::Some(Log_oneof_event::start(ref mut v)) => v,
             _ => panic!(),
         }
     }
 
     // Take field
-    pub fn take_node_started(&mut self) -> Log_NodeStarted {
-        if self.has_node_started() {
+    pub fn take_start(&mut self) -> Log_Start {
+        if self.has_start() {
             match self.event.take() {
-                ::std::option::Option::Some(Log_oneof_event::node_started(v)) => v,
+                ::std::option::Option::Some(Log_oneof_event::start(v)) => v,
                 _ => panic!(),
             }
         } else {
-            Log_NodeStarted::new()
+            Log_Start::new()
         }
     }
 
-    // .tracing.Log.SendWhoAreYou send_whoareyou = 3;
+    // .tracing.Log.Shutdown shutdown = 3;
+
+
+    pub fn get_shutdown(&self) -> &Log_Shutdown {
+        match self.event {
+            ::std::option::Option::Some(Log_oneof_event::shutdown(ref v)) => v,
+            _ => <Log_Shutdown as ::protobuf::Message>::default_instance(),
+        }
+    }
+    pub fn clear_shutdown(&mut self) {
+        self.event = ::std::option::Option::None;
+    }
+
+    pub fn has_shutdown(&self) -> bool {
+        match self.event {
+            ::std::option::Option::Some(Log_oneof_event::shutdown(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_shutdown(&mut self, v: Log_Shutdown) {
+        self.event = ::std::option::Option::Some(Log_oneof_event::shutdown(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_shutdown(&mut self) -> &mut Log_Shutdown {
+        if let ::std::option::Option::Some(Log_oneof_event::shutdown(_)) = self.event {
+        } else {
+            self.event = ::std::option::Option::Some(Log_oneof_event::shutdown(Log_Shutdown::new()));
+        }
+        match self.event {
+            ::std::option::Option::Some(Log_oneof_event::shutdown(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_shutdown(&mut self) -> Log_Shutdown {
+        if self.has_shutdown() {
+            match self.event.take() {
+                ::std::option::Option::Some(Log_oneof_event::shutdown(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            Log_Shutdown::new()
+        }
+    }
+
+    // .tracing.Log.SendWhoAreYou send_whoareyou = 4;
 
 
     pub fn get_send_whoareyou(&self) -> &Log_SendWhoAreYou {
@@ -184,7 +234,7 @@ impl Log {
         }
     }
 
-    // .tracing.Log.SendOrdinaryMessage send_ordinary_message = 4;
+    // .tracing.Log.SendOrdinaryMessage send_ordinary_message = 5;
 
 
     pub fn get_send_ordinary_message(&self) -> &Log_SendOrdinaryMessage {
@@ -233,7 +283,7 @@ impl Log {
         }
     }
 
-    // .tracing.Log.SendHandshakeMessage send_handshake_message = 5;
+    // .tracing.Log.SendHandshakeMessage send_handshake_message = 6;
 
 
     pub fn get_send_handshake_message(&self) -> &Log_SendHandshakeMessage {
@@ -290,7 +340,12 @@ impl ::protobuf::Message for Log {
                 return false;
             }
         };
-        if let Some(Log_oneof_event::node_started(ref v)) = self.event {
+        if let Some(Log_oneof_event::start(ref v)) = self.event {
+            if !v.is_initialized() {
+                return false;
+            }
+        }
+        if let Some(Log_oneof_event::shutdown(ref v)) = self.event {
             if !v.is_initialized() {
                 return false;
             }
@@ -324,21 +379,27 @@ impl ::protobuf::Message for Log {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
-                    self.event = ::std::option::Option::Some(Log_oneof_event::node_started(is.read_message()?));
+                    self.event = ::std::option::Option::Some(Log_oneof_event::start(is.read_message()?));
                 },
                 3 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
-                    self.event = ::std::option::Option::Some(Log_oneof_event::send_whoareyou(is.read_message()?));
+                    self.event = ::std::option::Option::Some(Log_oneof_event::shutdown(is.read_message()?));
                 },
                 4 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
-                    self.event = ::std::option::Option::Some(Log_oneof_event::send_ordinary_message(is.read_message()?));
+                    self.event = ::std::option::Option::Some(Log_oneof_event::send_whoareyou(is.read_message()?));
                 },
                 5 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    self.event = ::std::option::Option::Some(Log_oneof_event::send_ordinary_message(is.read_message()?));
+                },
+                6 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
@@ -362,7 +423,11 @@ impl ::protobuf::Message for Log {
         }
         if let ::std::option::Option::Some(ref v) = self.event {
             match v {
-                &Log_oneof_event::node_started(ref v) => {
+                &Log_oneof_event::start(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+                },
+                &Log_oneof_event::shutdown(ref v) => {
                     let len = v.compute_size();
                     my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
                 },
@@ -393,23 +458,28 @@ impl ::protobuf::Message for Log {
         }
         if let ::std::option::Option::Some(ref v) = self.event {
             match v {
-                &Log_oneof_event::node_started(ref v) => {
+                &Log_oneof_event::start(ref v) => {
                     os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
                     os.write_raw_varint32(v.get_cached_size())?;
                     v.write_to_with_cached_sizes(os)?;
                 },
-                &Log_oneof_event::send_whoareyou(ref v) => {
+                &Log_oneof_event::shutdown(ref v) => {
                     os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
                     os.write_raw_varint32(v.get_cached_size())?;
                     v.write_to_with_cached_sizes(os)?;
                 },
-                &Log_oneof_event::send_ordinary_message(ref v) => {
+                &Log_oneof_event::send_whoareyou(ref v) => {
                     os.write_tag(4, ::protobuf::wire_format::WireTypeLengthDelimited)?;
                     os.write_raw_varint32(v.get_cached_size())?;
                     v.write_to_with_cached_sizes(os)?;
                 },
-                &Log_oneof_event::send_handshake_message(ref v) => {
+                &Log_oneof_event::send_ordinary_message(ref v) => {
                     os.write_tag(5, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+                    os.write_raw_varint32(v.get_cached_size())?;
+                    v.write_to_with_cached_sizes(os)?;
+                },
+                &Log_oneof_event::send_handshake_message(ref v) => {
+                    os.write_tag(6, ::protobuf::wire_format::WireTypeLengthDelimited)?;
                     os.write_raw_varint32(v.get_cached_size())?;
                     v.write_to_with_cached_sizes(os)?;
                 },
@@ -458,10 +528,15 @@ impl ::protobuf::Message for Log {
                 |m: &Log| { &m.timestamp },
                 |m: &mut Log| { &mut m.timestamp },
             ));
-            fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Log_NodeStarted>(
-                "node_started",
-                Log::has_node_started,
-                Log::get_node_started,
+            fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Log_Start>(
+                "start",
+                Log::has_start,
+                Log::get_start,
+            ));
+            fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Log_Shutdown>(
+                "shutdown",
+                Log::has_shutdown,
+                Log::get_shutdown,
             ));
             fields.push(::protobuf::reflect::accessor::make_singular_message_accessor::<_, Log_SendWhoAreYou>(
                 "send_whoareyou",
@@ -499,6 +574,7 @@ impl ::protobuf::Clear for Log {
         self.event = ::std::option::Option::None;
         self.event = ::std::option::Option::None;
         self.event = ::std::option::Option::None;
+        self.event = ::std::option::Option::None;
         self.unknown_fields.clear();
     }
 }
@@ -516,7 +592,7 @@ impl ::protobuf::reflect::ProtobufValue for Log {
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct Log_NodeStarted {
+pub struct Log_Start {
     // message fields
     pub node_id: ::std::string::String,
     // special fields
@@ -524,14 +600,14 @@ pub struct Log_NodeStarted {
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a Log_NodeStarted {
-    fn default() -> &'a Log_NodeStarted {
-        <Log_NodeStarted as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a Log_Start {
+    fn default() -> &'a Log_Start {
+        <Log_Start as ::protobuf::Message>::default_instance()
     }
 }
 
-impl Log_NodeStarted {
-    pub fn new() -> Log_NodeStarted {
+impl Log_Start {
+    pub fn new() -> Log_Start {
         ::std::default::Default::default()
     }
 
@@ -562,7 +638,7 @@ impl Log_NodeStarted {
     }
 }
 
-impl ::protobuf::Message for Log_NodeStarted {
+impl ::protobuf::Message for Log_Start {
     fn is_initialized(&self) -> bool {
         true
     }
@@ -628,8 +704,8 @@ impl ::protobuf::Message for Log_NodeStarted {
         Self::descriptor_static()
     }
 
-    fn new() -> Log_NodeStarted {
-        Log_NodeStarted::new()
+    fn new() -> Log_Start {
+        Log_Start::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
@@ -638,37 +714,196 @@ impl ::protobuf::Message for Log_NodeStarted {
             let mut fields = ::std::vec::Vec::new();
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "node_id",
-                |m: &Log_NodeStarted| { &m.node_id },
-                |m: &mut Log_NodeStarted| { &mut m.node_id },
+                |m: &Log_Start| { &m.node_id },
+                |m: &mut Log_Start| { &mut m.node_id },
             ));
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Log_NodeStarted>(
-                "Log.NodeStarted",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Log_Start>(
+                "Log.Start",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static Log_NodeStarted {
-        static instance: ::protobuf::rt::LazyV2<Log_NodeStarted> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(Log_NodeStarted::new)
+    fn default_instance() -> &'static Log_Start {
+        static instance: ::protobuf::rt::LazyV2<Log_Start> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(Log_Start::new)
     }
 }
 
-impl ::protobuf::Clear for Log_NodeStarted {
+impl ::protobuf::Clear for Log_Start {
     fn clear(&mut self) {
         self.node_id.clear();
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for Log_NodeStarted {
+impl ::std::fmt::Debug for Log_Start {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for Log_NodeStarted {
+impl ::protobuf::reflect::ProtobufValue for Log_Start {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct Log_Shutdown {
+    // message fields
+    pub node_id: ::std::string::String,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a Log_Shutdown {
+    fn default() -> &'a Log_Shutdown {
+        <Log_Shutdown as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl Log_Shutdown {
+    pub fn new() -> Log_Shutdown {
+        ::std::default::Default::default()
+    }
+
+    // string node_id = 1;
+
+
+    pub fn get_node_id(&self) -> &str {
+        &self.node_id
+    }
+    pub fn clear_node_id(&mut self) {
+        self.node_id.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_node_id(&mut self, v: ::std::string::String) {
+        self.node_id = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_node_id(&mut self) -> &mut ::std::string::String {
+        &mut self.node_id
+    }
+
+    // Take field
+    pub fn take_node_id(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.node_id, ::std::string::String::new())
+    }
+}
+
+impl ::protobuf::Message for Log_Shutdown {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.node_id)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if !self.node_id.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.node_id);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if !self.node_id.is_empty() {
+            os.write_string(1, &self.node_id)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> Log_Shutdown {
+        Log_Shutdown::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let mut fields = ::std::vec::Vec::new();
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                "node_id",
+                |m: &Log_Shutdown| { &m.node_id },
+                |m: &mut Log_Shutdown| { &mut m.node_id },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Log_Shutdown>(
+                "Log.Shutdown",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static Log_Shutdown {
+        static instance: ::protobuf::rt::LazyV2<Log_Shutdown> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(Log_Shutdown::new)
+    }
+}
+
+impl ::protobuf::Clear for Log_Shutdown {
+    fn clear(&mut self) {
+        self.node_id.clear();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for Log_Shutdown {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Log_Shutdown {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -3292,44 +3527,45 @@ impl ::protobuf::reflect::ProtobufValue for Nodes {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1fsrc/tracing/proto/tracing.proto\x12\x07tracing\x1a\x1fgoogle/proto\
-    buf/timestamp.proto\"\xad\t\n\x03Log\x128\n\ttimestamp\x18\x01\x20\x01(\
-    \x0b2\x1a.google.protobuf.TimestampR\ttimestamp\x12=\n\x0cnode_started\
-    \x18\x02\x20\x01(\x0b2\x18.tracing.Log.NodeStartedH\0R\x0bnodeStarted\
-    \x12C\n\x0esend_whoareyou\x18\x03\x20\x01(\x0b2\x1a.tracing.Log.SendWhoA\
-    reYouH\0R\rsendWhoareyou\x12V\n\x15send_ordinary_message\x18\x04\x20\x01\
-    (\x0b2\x20.tracing.Log.SendOrdinaryMessageH\0R\x13sendOrdinaryMessage\
-    \x12Y\n\x16send_handshake_message\x18\x05\x20\x01(\x0b2!.tracing.Log.Sen\
-    dHandshakeMessageH\0R\x14sendHandshakeMessage\x1a&\n\x0bNodeStarted\x12\
-    \x17\n\x07node_id\x18\x01\x20\x01(\tR\x06nodeId\x1ay\n\rSendWhoAreYou\
-    \x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\
-    \x18\x02\x20\x01(\tR\trecipient\x12\x19\n\x08id_nonce\x18\x03\x20\x03(\r\
-    R\x07idNonce\x12\x17\n\x07enr_seq\x18\x04\x20\x01(\x04R\x06enrSeq\x1a\
-    \xa5\x02\n\x13SendOrdinaryMessage\x12\x16\n\x06sender\x18\x01\x20\x01(\t\
-    R\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\trecipient\x12)\n\
-    \x06random\x18\x03\x20\x01(\x0b2\x0f.tracing.RandomH\0R\x06random\x12#\n\
-    \x04ping\x18\x04\x20\x01(\x0b2\r.tracing.PingH\0R\x04ping\x12#\n\x04pong\
-    \x18\x05\x20\x01(\x0b2\r.tracing.PongH\0R\x04pong\x120\n\tfind_node\x18\
-    \x06\x20\x01(\x0b2\x11.tracing.FindNodeH\0R\x08findNode\x12&\n\x05nodes\
-    \x18\x07\x20\x01(\x0b2\x0e.tracing.NodesH\0R\x05nodesB\t\n\x07message\
-    \x1a\xe0\x02\n\x14SendHandshakeMessage\x12\x16\n\x06sender\x18\x01\x20\
-    \x01(\tR\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\trecipient\
-    \x12@\n\x06record\x18\x03\x20\x01(\x0b2(.tracing.Log.SendHandshakeMessag\
-    e.RecordR\x06record\x12#\n\x04ping\x18\x04\x20\x01(\x0b2\r.tracing.PingH\
-    \0R\x04ping\x12#\n\x04pong\x18\x05\x20\x01(\x0b2\r.tracing.PongH\0R\x04p\
-    ong\x120\n\tfind_node\x18\x06\x20\x01(\x0b2\x11.tracing.FindNodeH\0R\x08\
-    findNode\x12&\n\x05nodes\x18\x07\x20\x01(\x0b2\x0e.tracing.NodesH\0R\x05\
-    nodes\x1a!\n\x06Record\x12\x17\n\x07enr_seq\x18\x01\x20\x01(\x04R\x06enr\
-    SeqB\t\n\x07messageB\x07\n\x05event\"\x08\n\x06Random\">\n\x04Ping\x12\
-    \x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\x17\n\x07enr_seq\
-    \x18\x02\x20\x01(\x04R\x06enrSeq\"\x88\x01\n\x04Pong\x12\x1d\n\nrequest_\
-    id\x18\x01\x20\x01(\tR\trequestId\x12\x17\n\x07enr_seq\x18\x02\x20\x01(\
-    \x04R\x06enrSeq\x12!\n\x0crecipient_ip\x18\x03\x20\x01(\tR\x0brecipientI\
-    p\x12%\n\x0erecipient_port\x18\x04\x20\x01(\rR\rrecipientPort\"G\n\x08Fi\
-    ndNode\x12\x1d\n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\x1c\n\td\
-    istances\x18\x02\x20\x03(\x04R\tdistances\"R\n\x05Nodes\x12\x1d\n\nreque\
-    st_id\x18\x01\x20\x01(\tR\trequestId\x12\x14\n\x05total\x18\x02\x20\x01(\
-    \x04R\x05total\x12\x14\n\x05nodes\x18\x03\x20\x03(\tR\x05nodesb\x06proto\
-    3\
+    buf/timestamp.proto\"\xee\t\n\x03Log\x128\n\ttimestamp\x18\x01\x20\x01(\
+    \x0b2\x1a.google.protobuf.TimestampR\ttimestamp\x12*\n\x05start\x18\x02\
+    \x20\x01(\x0b2\x12.tracing.Log.StartH\0R\x05start\x123\n\x08shutdown\x18\
+    \x03\x20\x01(\x0b2\x15.tracing.Log.ShutdownH\0R\x08shutdown\x12C\n\x0ese\
+    nd_whoareyou\x18\x04\x20\x01(\x0b2\x1a.tracing.Log.SendWhoAreYouH\0R\rse\
+    ndWhoareyou\x12V\n\x15send_ordinary_message\x18\x05\x20\x01(\x0b2\x20.tr\
+    acing.Log.SendOrdinaryMessageH\0R\x13sendOrdinaryMessage\x12Y\n\x16send_\
+    handshake_message\x18\x06\x20\x01(\x0b2!.tracing.Log.SendHandshakeMessag\
+    eH\0R\x14sendHandshakeMessage\x1a\x20\n\x05Start\x12\x17\n\x07node_id\
+    \x18\x01\x20\x01(\tR\x06nodeId\x1a#\n\x08Shutdown\x12\x17\n\x07node_id\
+    \x18\x01\x20\x01(\tR\x06nodeId\x1ay\n\rSendWhoAreYou\x12\x16\n\x06sender\
+    \x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\trecipient\x18\x02\x20\x01(\tR\
+    \trecipient\x12\x19\n\x08id_nonce\x18\x03\x20\x03(\rR\x07idNonce\x12\x17\
+    \n\x07enr_seq\x18\x04\x20\x01(\x04R\x06enrSeq\x1a\xa5\x02\n\x13SendOrdin\
+    aryMessage\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x1c\n\t\
+    recipient\x18\x02\x20\x01(\tR\trecipient\x12)\n\x06random\x18\x03\x20\
+    \x01(\x0b2\x0f.tracing.RandomH\0R\x06random\x12#\n\x04ping\x18\x04\x20\
+    \x01(\x0b2\r.tracing.PingH\0R\x04ping\x12#\n\x04pong\x18\x05\x20\x01(\
+    \x0b2\r.tracing.PongH\0R\x04pong\x120\n\tfind_node\x18\x06\x20\x01(\x0b2\
+    \x11.tracing.FindNodeH\0R\x08findNode\x12&\n\x05nodes\x18\x07\x20\x01(\
+    \x0b2\x0e.tracing.NodesH\0R\x05nodesB\t\n\x07message\x1a\xe0\x02\n\x14Se\
+    ndHandshakeMessage\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\
+    \x1c\n\trecipient\x18\x02\x20\x01(\tR\trecipient\x12@\n\x06record\x18\
+    \x03\x20\x01(\x0b2(.tracing.Log.SendHandshakeMessage.RecordR\x06record\
+    \x12#\n\x04ping\x18\x04\x20\x01(\x0b2\r.tracing.PingH\0R\x04ping\x12#\n\
+    \x04pong\x18\x05\x20\x01(\x0b2\r.tracing.PongH\0R\x04pong\x120\n\tfind_n\
+    ode\x18\x06\x20\x01(\x0b2\x11.tracing.FindNodeH\0R\x08findNode\x12&\n\
+    \x05nodes\x18\x07\x20\x01(\x0b2\x0e.tracing.NodesH\0R\x05nodes\x1a!\n\
+    \x06Record\x12\x17\n\x07enr_seq\x18\x01\x20\x01(\x04R\x06enrSeqB\t\n\x07\
+    messageB\x07\n\x05event\"\x08\n\x06Random\">\n\x04Ping\x12\x1d\n\nreques\
+    t_id\x18\x01\x20\x01(\tR\trequestId\x12\x17\n\x07enr_seq\x18\x02\x20\x01\
+    (\x04R\x06enrSeq\"\x88\x01\n\x04Pong\x12\x1d\n\nrequest_id\x18\x01\x20\
+    \x01(\tR\trequestId\x12\x17\n\x07enr_seq\x18\x02\x20\x01(\x04R\x06enrSeq\
+    \x12!\n\x0crecipient_ip\x18\x03\x20\x01(\tR\x0brecipientIp\x12%\n\x0erec\
+    ipient_port\x18\x04\x20\x01(\rR\rrecipientPort\"G\n\x08FindNode\x12\x1d\
+    \n\nrequest_id\x18\x01\x20\x01(\tR\trequestId\x12\x1c\n\tdistances\x18\
+    \x02\x20\x03(\x04R\tdistances\"R\n\x05Nodes\x12\x1d\n\nrequest_id\x18\
+    \x01\x20\x01(\tR\trequestId\x12\x14\n\x05total\x18\x02\x20\x01(\x04R\x05\
+    total\x12\x14\n\x05nodes\x18\x03\x20\x03(\tR\x05nodesb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;
