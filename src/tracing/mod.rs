@@ -95,6 +95,7 @@ pub fn shutdown(node_id: NodeId) {
     shutdown.set_node_id(format!("{}", node_id));
 
     let mut log = Log::new();
+    log.set_timestamp(timestamp());
     log.set_shutdown(shutdown);
 
     write(log);
