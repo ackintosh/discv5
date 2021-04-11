@@ -884,6 +884,13 @@ impl Handler {
             // Remove any associated request from pending_request
             match message {
                 Message::Request(request) => {
+                    // TODO: conditional compilation
+                    crate::tracing::handle_rpc_request(
+                        &node_address.node_id,
+                        &self.node_id,
+                        &request,
+                    );
+
                     // report the request to the application
                     let _ = self
                         .outbound_channel

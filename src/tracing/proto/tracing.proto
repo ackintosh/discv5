@@ -12,6 +12,9 @@ message Log {
     SendWhoAreYou send_whoareyou = 4;
     SendOrdinaryMessage send_ordinary_message = 5;
     SendHandshakeMessage send_handshake_message = 6;
+
+    // Handle ordinary message or handshake message.
+    HandleMessage handle_message = 7;
   }
 
   message Start {
@@ -32,6 +35,18 @@ message Log {
 
   // https://github.com/ethereum/devp2p/blob/master/discv5/discv5-wire.md#ordinary-message-packet-flag--0
   message SendOrdinaryMessage {
+    string sender = 1;
+    string recipient = 2;
+    oneof message {
+      Random random = 3;
+      Ping ping = 4;
+      Pong pong = 5;
+      FindNode find_node = 6;
+      Nodes nodes = 7;
+    }
+  }
+
+  message HandleMessage {
     string sender = 1;
     string recipient = 2;
     oneof message {

@@ -4,7 +4,7 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random, Log_Shutdown, Log_Start};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random, Log_Shutdown, Log_Start, Log_HandleMessage};
 use crate::packet::IdNonce;
 use std::convert::TryFrom;
 use crate::Enr;
@@ -132,6 +132,28 @@ pub fn send_rpc_request(sender: &NodeId, recipient: &NodeId, request: &Request) 
     let mut log = Log::new();
     log.set_timestamp(timestamp());
     log.set_send_ordinary_message(send_ordinary_message);
+
+    write(log);
+}
+
+pub fn handle_rpc_request(sender: &NodeId, recipient: &NodeId, request: &Request) {
+    let mut handle_message = Log_HandleMessage::new();
+    handle_message.set_sender(format!("{}", sender));
+    handle_message.set_recipient(format!("{}", recipient));
+
+    let protocol_message: ProtocolMessageRequest = request.into();
+    match protocol_message {
+        ProtocolMessageRequest::Ping(ping) => {
+            handle_message.set_ping(ping);
+        }
+        ProtocolMessageRequest::FindNode(find_node) => {
+            handle_message.set_find_node(find_node);
+        }
+    }
+
+    let mut log = Log::new();
+    log.set_timestamp(timestamp());
+    log.set_handle_message(handle_message);
 
     write(log);
 }
