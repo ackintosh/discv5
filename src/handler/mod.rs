@@ -625,6 +625,13 @@ impl Handler {
             return;
         }
 
+        // TODO: conditional compilation
+        crate::tracing::handle_whoareyou(
+            &request_call.contact.node_id(),
+            &self.node_id,
+            enr_seq,
+        );
+
         // Encrypt the message with an auth header and respond
 
         // First if a new version of our ENR is requested, obtain it for the header

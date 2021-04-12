@@ -4,7 +4,7 @@ use chrono::Local;
 use protobuf::well_known_types::Timestamp;
 use std::io::Write;
 use crate::rpc::{Request, RequestBody, Response, ResponseBody};
-use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random, Log_Shutdown, Log_Start, Log_HandleMessage};
+use crate::tracing::generated::tracing::{Log_SendOrdinaryMessage, Log, Log_SendWhoAreYou, Log_SendHandshakeMessage, Log_SendHandshakeMessage_Record, Ping, Pong, FindNode, Nodes, Random, Log_Shutdown, Log_Start, Log_HandleMessage, Log_HandleWhoAreYou};
 use crate::packet::IdNonce;
 use std::convert::TryFrom;
 use crate::Enr;
@@ -212,6 +212,19 @@ pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, e
     let mut log = Log::new();
     log.set_timestamp(timestamp());
     log.set_send_whoareyou(whoareyou);
+
+    write(log);
+}
+
+pub fn handle_whoareyou(sender: &NodeId, recipient: &NodeId, enr_seq: u64) {
+    let mut whoareyou = Log_HandleWhoAreYou::new();
+    whoareyou.set_sender(format!("{}", sender));
+    whoareyou.set_recipient(format!("{}", recipient));
+    whoareyou.set_enr_seq(enr_seq);
+
+    let mut log = Log::new();
+    log.set_timestamp(timestamp());
+    log.set_handle_whoareyou(whoareyou);
 
     write(log);
 }

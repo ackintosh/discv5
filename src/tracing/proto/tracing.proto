@@ -13,8 +13,9 @@ message Log {
     SendOrdinaryMessage send_ordinary_message = 5;
     SendHandshakeMessage send_handshake_message = 6;
 
+    HandleWhoAreYou handle_whoareyou = 7;
     // Handle ordinary message or handshake message.
-    HandleMessage handle_message = 7;
+    HandleMessage handle_message = 8;
   }
 
   message Start {
@@ -44,6 +45,12 @@ message Log {
       FindNode find_node = 6;
       Nodes nodes = 7;
     }
+  }
+
+  message HandleWhoAreYou {
+    string sender = 1;
+    string recipient = 2;
+    uint64 enr_seq = 3;
   }
 
   message HandleMessage {
