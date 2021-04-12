@@ -898,6 +898,13 @@ impl Handler {
                         .await;
                 }
                 Message::Response(response) => {
+                    // TODO: conditional compilation
+                    crate::tracing::handle_rpc_response(
+                        &node_address.node_id,
+                        &self.node_id,
+                        &response,
+                    );
+
                     // Sessions could be awaiting an ENR response. Check if this response matches
                     // these
                     if let Some(request_id) = session.awaiting_enr.as_ref() {

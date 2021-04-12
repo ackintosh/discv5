@@ -180,6 +180,28 @@ pub fn send_rpc_response(sender: &NodeId, recipient: &NodeId, response: &Respons
     write(log);
 }
 
+pub fn handle_rpc_response(sender: &NodeId, recipient: &NodeId, response: &Response) {
+    let mut handle_message = Log_HandleMessage::new();
+    handle_message.set_sender(format!("{}", sender));
+    handle_message.set_recipient(format!("{}", recipient));
+
+    let protocol_message: ProtocolMessageResponse = response.into();
+    match protocol_message {
+        ProtocolMessageResponse::Pong(pong) => {
+            handle_message.set_pong(pong);
+        }
+        ProtocolMessageResponse::Nodes(nodes) => {
+            handle_message.set_nodes(nodes);
+        }
+    }
+
+    let mut log = Log::new();
+    log.set_timestamp(timestamp());
+    log.set_handle_message(handle_message);
+
+    write(log);
+}
+
 pub fn send_whoareyou(sender: &NodeId, recipient: &NodeId, id_nonce: &IdNonce, enr_seq: u64) {
     let mut whoareyou = Log_SendWhoAreYou::new();
     whoareyou.set_sender(format!("{}", sender));
