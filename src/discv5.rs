@@ -449,9 +449,9 @@ impl Discv5 {
                 .await
                 .map_err(|_| QueryError::ChannelFailed("Service channel closed".into()))?;
 
-            Ok(callback_recv
+            callback_recv
                 .await
-                .map_err(|e| QueryError::ChannelFailed(e.to_string()))?)
+                .map_err(|e| QueryError::ChannelFailed(e.to_string()))
         }
     }
 
@@ -496,9 +496,9 @@ impl Discv5 {
                 .await
                 .map_err(|_| QueryError::ChannelFailed("Service channel closed".into()))?;
 
-            Ok(callback_recv
+            callback_recv
                 .await
-                .map_err(|e| QueryError::ChannelFailed(e.to_string()))?)
+                .map_err(|e| QueryError::ChannelFailed(e.to_string()))
         }
     }
 
@@ -519,9 +519,9 @@ impl Discv5 {
                 .await
                 .map_err(|_| Discv5Error::ServiceChannelClosed)?;
 
-            Ok(callback_recv
+            callback_recv
                 .await
-                .map_err(|_| Discv5Error::ServiceChannelClosed)?)
+                .map_err(|_| Discv5Error::ServiceChannelClosed)
         }
     }
 
