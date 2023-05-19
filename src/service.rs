@@ -789,10 +789,16 @@ impl Service {
 
                         // Only count votes that from peers we have contacted.
                         let key: kbucket::Key<NodeId> = node_id.into();
+                        let e = self.kbuckets.write().entry(&key);
+                        println!("entry: {:?}", e);
                         let should_count = matches!(
-                        self.kbuckets.write().entry(&key),
+                        e,
                         kbucket::Entry::Present(_, status)
                             if status.is_connected() && !status.is_incoming());
+                        // let should_count = matches!(
+                        // self.kbuckets.write().entry(&key),
+                        // kbucket::Entry::Present(_, status)
+                        //     if status.is_connected() && !status.is_incoming());
 
                         println!("should_count: {should_count}");
                         if should_count {
