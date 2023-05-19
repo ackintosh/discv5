@@ -783,6 +783,7 @@ impl Service {
                             warn!("Failed to send callback response {:?}", e)
                         };
                     } else {
+                        println!("pong");
                         let socket = SocketAddr::new(ip, port);
                         // perform ENR majority-based update if required.
 
@@ -793,6 +794,7 @@ impl Service {
                         kbucket::Entry::Present(_, status)
                             if status.is_connected() && !status.is_incoming());
 
+                        println!("should_count: {should_count}");
                         if should_count {
                             // get the advertised local addresses
                             let (local_ip4_socket, local_ip6_socket) = {
@@ -801,6 +803,7 @@ impl Service {
                             };
 
                             if let Some(ref mut ip_votes) = self.ip_votes {
+                                println!("ip_votes");
                                 ip_votes.insert(node_id, socket);
                                 let (maybe_ip4_majority, maybe_ip6_majority) = ip_votes.majority();
 
@@ -819,6 +822,7 @@ impl Service {
                                     }
                                 });
 
+                                println!("new_ip4:{:?}, new_ip6:{:?}", new_ip4, new_ip6);
                                 if new_ip4.is_some() || new_ip6.is_some() {
                                     let mut updated = false;
 
