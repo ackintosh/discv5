@@ -699,7 +699,7 @@ impl Handler {
                 // trying to update an old session that may have expired.
                 let connection_direction = {
                     match (request_call.initiating_session(), &request_call.body()) {
-                        (true, RequestBody::Ping { .. }) => ConnectionDirection::Incoming,
+                        // (true, RequestBody::Ping { .. }) => ConnectionDirection::Incoming,
                         (true, _) => ConnectionDirection::Outgoing,
                         (false, _) => ConnectionDirection::Incoming,
                     }
