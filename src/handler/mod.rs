@@ -705,6 +705,7 @@ impl Handler {
                     }
                 };
 
+                debug!("request_call: {:?}", request_call);
                 // We already know the ENR. Send the handshake response packet
                 trace!("Sending Authentication response to node: {}", node_address);
                 request_call.update_packet(auth_packet.clone());
