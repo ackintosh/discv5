@@ -124,6 +124,17 @@ impl ActiveRequests {
             }
         }
     }
+
+    pub fn debug(&self) -> String {
+        let mut s = vec![];
+        s.push("active_requests_mapping: [".to_string());
+        for (address, requests) in self.active_requests_mapping.iter() {
+            s.push(format!("{address}: {}", requests.len()));
+        }
+        s.push("]".to_string());
+
+        s.join("")
+    }
 }
 
 impl Stream for ActiveRequests {

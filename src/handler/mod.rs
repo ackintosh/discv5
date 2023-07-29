@@ -170,6 +170,7 @@ enum HandlerReqId {
 }
 
 /// A request queued for sending.
+#[derive(Debug)]
 struct PendingRequest {
     contact: NodeContact,
     request_id: HandlerReqId,
@@ -319,6 +320,7 @@ impl Handler {
     /// The main execution loop for the handler.
     async fn start<P: ProtocolIdentity>(&mut self) {
         let mut banned_nodes_check = tokio::time::interval(Duration::from_secs(BANNED_NODES_CHECK));
+        let mut debug_fields = tokio::time::interval(Duration::from_secs(2));
 
         loop {
             tokio::select! {
@@ -344,11 +346,17 @@ impl Handler {
                     self.handle_request_timeout(node_address, active_request).await;
                 }
                 Some(Ok((node_address, _challenge))) = self.active_challenges.next() => {
+                    debug!("A challenge has expired.");
                     // A challenge has expired. There could be active requests impacted by this
                     // challenge. We replay them here
                     self.replay_active_requests::<P>(&node_address).await;
                 }
                 _ = banned_nodes_check.tick() => self.unban_nodes_check(), // Unban nodes that are past the timeout
+                _ = debug_fields.tick() => {
+                    let read = self.filter_expected_responses.read();
+                    let expected_responses = read.iter().collect::<Vec<_>>();
+                    debug!("***debugging fields of Handler*** expected_responses: {:?}, active_requests: {}, pending_requests: {:?}", expected_responses, self.active_requests.debug(), self.pending_requests);
+                },
                 _ = &mut self.exit => {
                     return;
                 }
@@ -1088,6 +1096,7 @@ impl Handler {
     /// Nodes response.
     async fn handle_response(&mut self, node_address: NodeAddress, response: Response) {
         // Find a matching request, if any
+        debug!("xxxxx handle_response response.id:{}", response.id);
         if let Some(mut request_call) = self
             .active_requests
             .remove_request(&node_address, &response.id)
@@ -1095,8 +1104,11 @@ impl Handler {
             // The response matches a request
             // Check to see if this is a Nodes response, in which case we may require to wait for
             // extra responses
+            debug!("xxxxx handle_response if response.id:{}", response.id);
             if let ResponseBody::Nodes { total, .. } = response.body {
+                debug!("xxxxx handle_response if -> nodes response.id:{}", response.id);
                 if total > 1 {
+                    debug!("xxxxx handle_response if -> nodes -> total > 1 response.id:{}", response.id);
                     // This is a multi-response Nodes response
                     if let Some(remaining_responses) = request_call.remaining_responses_mut() {
                         *remaining_responses -= 1;
@@ -1115,6 +1127,7 @@ impl Handler {
                             return;
                         }
                     } else {
+                        debug!("xxxxx handle_response if -> nodes -> else response.id:{}", response.id);
                         // This is the first instance
                         *request_call.remaining_responses_mut() = Some(total - 1);
                         // add back the request and send the response
@@ -1247,6 +1260,7 @@ impl Handler {
                         // Do not report failures on requests belonging to the handler.
                     }
                     HandlerReqId::External(id) => {
+                        debug!("fail_session. pending_requests id {id}");
                         if let Err(e) = self
                             .service_send
                             .send(HandlerOut::RequestFailed(id, error.clone()))
@@ -1269,6 +1283,7 @@ impl Handler {
                     // Do not report failures on requests belonging to the handler.
                 }
                 HandlerReqId::External(id) => {
+                    debug!("fail_session. active_requests id {id}");
                     if let Err(e) = self
                         .service_send
                         .send(HandlerOut::RequestFailed(id.clone(), error.clone()))

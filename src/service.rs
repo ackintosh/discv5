@@ -682,6 +682,7 @@ impl Service {
 
                     if let Some(CallbackResponse::Nodes(callback)) = active_request.callback.take()
                     {
+                        debug!("handle_rpc_response: if CallbackResponse::Nodes");
                         if let Err(e) = callback.send(Ok(nodes)) {
                             warn!("Failed to send response in callback {:?}", e)
                         }
