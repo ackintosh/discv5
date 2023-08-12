@@ -14,6 +14,10 @@ pub(super) struct ActiveRequests {
 }
 
 impl ActiveRequests {
+    pub fn is_empty(&self) -> bool {
+        self.active_requests_mapping.is_empty() && self.active_requests_nonce_mapping.is_empty()
+    }
+
     pub fn new(request_timeout: Duration) -> Self {
         ActiveRequests {
             active_requests_mapping: HashMap::new(),

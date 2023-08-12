@@ -234,6 +234,7 @@ impl Handler {
         key: Arc<RwLock<CombinedKey>>,
         config: Discv5Config,
     ) -> Result<HandlerReturn, std::io::Error> {
+        println!("bbbbb");
         let (exit_sender, exit) = oneshot::channel();
         // create the channels to send/receive messages from the application
         let (handler_send, service_recv) = mpsc::unbounded_channel();
@@ -319,14 +320,17 @@ impl Handler {
 
     /// The main execution loop for the handler.
     async fn start<P: ProtocolIdentity>(&mut self) {
+        println!("start");
         let mut banned_nodes_check = tokio::time::interval(Duration::from_secs(BANNED_NODES_CHECK));
         let mut debug_fields = tokio::time::interval(Duration::from_secs(2));
 
         loop {
             tokio::select! {
                 Some(handler_request) = self.service_recv.recv() => {
+                    println!("recv: {handler_request:?}");
                     match handler_request {
                         HandlerIn::Request(contact, request) => {
+                            println!("request");
                             let Request { id, body: request } = *request;
                             if let Err(request_error) =  self.send_request::<P>(contact, HandlerReqId::External(id.clone()), request).await {
                                 // If the sending failed report to the application
@@ -355,6 +359,7 @@ impl Handler {
                 _ = debug_fields.tick() => {
                     let read = self.filter_expected_responses.read();
                     let expected_responses = read.iter().collect::<Vec<_>>();
+                    println!("ffff");
                     debug!("***debugging fields of Handler*** expected_responses: {:?}, active_requests: {}, pending_requests: {:?}", expected_responses, self.active_requests.debug(), self.pending_requests);
                 },
                 _ = &mut self.exit => {
@@ -474,6 +479,7 @@ impl Handler {
         request_id: HandlerReqId,
         request: RequestBody,
     ) -> Result<(), RequestError> {
+        println!("send_request");
         let node_address = contact.node_address();
 
         if self.listen_sockets.contains(&node_address.socket_addr) {
@@ -541,6 +547,7 @@ impl Handler {
         node_address: NodeAddress,
         response: Response,
     ) {
+        println!("send_respons");
         // Check for an established session
         let packet = if let Some(session) = self.sessions.get_mut(&node_address) {
             session.encrypt_message::<P>(self.node_id, &response.encode())

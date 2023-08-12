@@ -24,14 +24,14 @@ fn init() {
         .try_init();
 }
 
-async fn build_handler<P: ProtocolIdentity>() -> Handler {
-    let config = Discv5ConfigBuilder::new(ListenConfig::default()).build();
-    let key = CombinedKey::generate_secp256k1();
-    let enr = EnrBuilder::new("v4")
-        .ip4(Ipv4Addr::LOCALHOST)
-        .udp4(9000)
-        .build(&key)
-        .unwrap();
+async fn build_handler<P: ProtocolIdentity>(enr: Enr, key: CombinedKey, config: Discv5Config) -> (oneshot::Sender<()>, mpsc::UnboundedSender<HandlerIn>, mpsc::Receiver<HandlerOut>, Handler) {
+    // let config = Discv5ConfigBuilder::new(ListenConfig::default()).build();
+    // let key = CombinedKey::generate_secp256k1();
+    // let enr = EnrBuilder::new("v4")
+    //     .ip4(Ipv4Addr::LOCALHOST)
+    //     .udp4(9000)
+    //     .build(&key)
+    //     .unwrap();
     let mut listen_sockets = SmallVec::default();
     listen_sockets.push((Ipv4Addr::LOCALHOST, 9000).into());
     let node_id = enr.node_id();
@@ -58,11 +58,11 @@ async fn build_handler<P: ProtocolIdentity>() -> Handler {
 
         Socket::new::<P>(socket_config).await.unwrap()
     };
-    let (_, service_recv) = mpsc::unbounded_channel();
-    let (service_send, _) = mpsc::channel(50);
-    let (_, exit) = oneshot::channel();
+    let (handler_send, service_recv) = mpsc::unbounded_channel();
+    let (service_send, handler_recv) = mpsc::channel(50);
+    let (exit_sender, exit) = oneshot::channel();
 
-    Handler {
+    let handler = Handler {
         request_retries: config.request_retries,
         node_id,
         enr: Arc::new(RwLock::new(enr)),
@@ -81,7 +81,8 @@ async fn build_handler<P: ProtocolIdentity>() -> Handler {
         listen_sockets,
         socket,
         exit,
-    }
+    };
+    (exit_sender, handler_send, handler_recv, handler)
 }
 
 macro_rules! arc_rw {
@@ -182,6 +183,7 @@ async fn simple_session_message() {
 #[tokio::test]
 // Tests sending multiple messages on an encrypted session
 async fn multiple_messages() {
+    println!("aaaaaa");
     init();
     let sender_port = 5002;
     let receiver_port = 5003;
@@ -211,22 +213,45 @@ async fn multiple_messages() {
     };
     let receiver_config = Discv5ConfigBuilder::new(receiver_listen_config).build();
 
-    let (_exit_send, sender_handler, mut sender_handler_recv) =
-        Handler::spawn::<DefaultProtocolId>(
-            arc_rw!(sender_enr.clone()),
-            arc_rw!(key1),
-            sender_config,
-        )
-        .await
-        .unwrap();
+    let (exit_sender, sender_handler, mut sender_handler_recv, mut handler1) = build_handler::<DefaultProtocolId>(
+        sender_enr.clone(),
+        key1,
+        sender_config,
+    ).await;
+    let sender_fut = async move {
+        handler1.start::<DefaultProtocolId>().await;
+        let read = handler1.filter_expected_responses.read();
+        let expected_responses = read.iter().collect::<Vec<_>>();
+        println!("handler1 debug: {:?}, {:?}, {:?}", handler1.pending_requests, expected_responses, handler1.active_requests.is_empty());
+    };
+    // let (_exit_send, sender_handler, mut sender_handler_recv) =
+    //     Handler::spawn::<DefaultProtocolId>(
+    //         arc_rw!(sender_enr.clone()),
+    //         arc_rw!(key1),
+    //         sender_config,
+    //     )
+    //     .await
+    //     .unwrap();
 
-    let (_exit_recv, recv_send, mut receiver_handler) = Handler::spawn::<DefaultProtocolId>(
-        arc_rw!(receiver_enr.clone()),
-        arc_rw!(key2),
+    let (exit_receiver, recv_send, mut receiver_handler, mut handler2) = build_handler::<DefaultProtocolId>(
+        receiver_enr.clone(),
+        key2,
         receiver_config,
-    )
-    .await
-    .unwrap();
+    ).await;
+    let receiver_fut = async move {
+        handler2.start::<DefaultProtocolId>().await;
+        let read = handler2.filter_expected_responses.read();
+        let expected_responses = read.iter().collect::<Vec<_>>();
+
+        println!("handler2 debug: {:?}, {:?}, {:?}", handler2.pending_requests, expected_responses, handler2.active_requests.is_empty());
+    };
+    // let (_exit_recv, recv_send, mut receiver_handler) = Handler::spawn::<DefaultProtocolId>(
+    //     arc_rw!(receiver_enr.clone()),
+    //     arc_rw!(key2),
+    //     receiver_config,
+    // )
+    // .await
+    // .unwrap();
 
     let send_message = Box::new(Request {
         id: RequestId(vec![1]),
@@ -280,10 +305,12 @@ async fn multiple_messages() {
                     assert_eq!(request, recv_send_message);
                     message_count += 1;
                     // required to send a pong response to establish the session
-                    let _ =
+                    let a =
                         recv_send.send(HandlerIn::Response(addr, Box::new(pong_response.clone())));
+                    println!("result: {a:?}");
                     if message_count == messages_to_send {
-                        return;
+                        // return;
+                        break;
                     }
                 }
                 _ => {
@@ -291,13 +318,29 @@ async fn multiple_messages() {
                 }
             }
         }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        exit_sender.send(()).unwrap();
+        exit_receiver.send(()).unwrap();
+        println!("ggg ->");
     };
 
-    let sleep_future = sleep(Duration::from_millis(100));
+    let sleep_future = sleep(Duration::from_millis(300));
+
+    let j = async move {
+        let _ = tokio::join!(sender_fut, receiver_fut, receiver);
+    };
 
     tokio::select! {
+        // _ = receiver_fut => {
+        //     println!("ggg2");
+        // }
         _ = sender => {}
-        _ = receiver => {}
+        _ = j => {
+            println!("jjj");
+        }
+        // _ = receiver => {
+        //     println!("vvvv");
+        // }
         _ = sleep_future => {
             panic!("Test timed out");
         }
@@ -525,7 +568,14 @@ async fn test_self_request_ipv6() {
 
 #[tokio::test]
 async fn remove_one_time_session() {
-    let mut handler = build_handler::<DefaultProtocolId>().await;
+    let config = Discv5ConfigBuilder::new(ListenConfig::default()).build();
+    let key = CombinedKey::generate_secp256k1();
+    let enr = EnrBuilder::new("v4")
+        .ip4(Ipv4Addr::LOCALHOST)
+        .udp4(9000)
+        .build(&key)
+        .unwrap();
+    let (_, _, _, mut handler) = build_handler::<DefaultProtocolId>(enr, key, config).await;
 
     let enr = {
         let key = CombinedKey::generate_secp256k1();
