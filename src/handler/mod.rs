@@ -639,7 +639,8 @@ impl Handler {
         }
 
         trace!(
-            "Received a WHOAREYOU packet response. Source: {}",
+            "Received a WHOAREYOU packet response. RequestId: {}, Source: {}",
+            RequestId::from(request_call.id()),
             request_call.contact()
         );
 
@@ -1262,6 +1263,7 @@ impl Handler {
         error: RequestError,
         remove_session: bool,
     ) {
+        trace!("fail_request");
         // The Request has expired, remove the session.
         // Fail the current request
         match request_call.id() {
@@ -1291,6 +1293,7 @@ impl Handler {
         error: RequestError,
         remove_session: bool,
     ) {
+        trace!("fail_session");
         if remove_session {
             self.sessions.remove(node_address);
             METRICS
@@ -1316,6 +1319,7 @@ impl Handler {
                 }
             }
         }
+        trace!("fail_session. active_requests: {:?}", self.active_requests.get(node_address));
         // fail all active requests
         for req in self
             .active_requests

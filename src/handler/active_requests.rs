@@ -62,8 +62,10 @@ impl ActiveRequests {
     /// Remove all requests associated with a node.
     pub fn remove_requests(&mut self, node_address: &NodeAddress) -> Option<Vec<RequestCall>> {
         let requests = self.active_requests_mapping.remove(node_address)?;
+        trace!("remove_requests: {:?}", requests);
         // Account for node addresses in `active_requests_nonce_mapping` with an empty list
         if requests.is_empty() {
+            trace!("remove_requests. is_empty");
             debug_unreachable!("expected to find requests in active_requests_mapping");
             return None;
         }
