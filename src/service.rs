@@ -780,18 +780,18 @@ impl Service {
                         if let Err(e) = callback.send(Ok(response)) {
                             warn!("Failed to send callback response {:?}", e)
                         };
-                    } else {
+                    // } else {
                         let socket = SocketAddr::new(ip, port);
                         // perform ENR majority-based update if required.
 
                         // Only count votes that from peers we have contacted.
-                        let key: kbucket::Key<NodeId> = node_id.into();
-                        let should_count = matches!(
-                        self.kbuckets.write().entry(&key),
-                        kbucket::Entry::Present(_, status)
-                            if status.is_connected() && !status.is_incoming());
+                        // let key: kbucket::Key<NodeId> = node_id.into();
+                        // let should_count = matches!(
+                        // self.kbuckets.write().entry(&key),
+                        // kbucket::Entry::Present(_, status)
+                        //     if status.is_connected() && !status.is_incoming());
 
-                        if should_count {
+                        if true {
                             // get the advertised local addresses
                             let (local_ip4_socket, local_ip6_socket) = {
                                 let local_enr = self.local_enr.read();
