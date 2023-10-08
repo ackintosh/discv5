@@ -39,6 +39,7 @@ use crate::{
 use delay_map::HashMapDelay;
 use enr::{CombinedKey, NodeId};
 use futures::prelude::*;
+use more_asserts::debug_unreachable;
 use parking_lot::RwLock;
 use smallvec::SmallVec;
 use std::{
@@ -966,45 +967,98 @@ impl Handler {
             node_address,
             message_nonce
         );
-        let active_requests = if let Some(nonce) = message_nonce {
-            // Except the active request that was used to establish the new session, as it has
-            // already been handled and shouldn't be replayed.
-            self.active_requests
-                .remove_requests_except(node_address, &nonce)
-        } else {
-            self.active_requests.remove_requests(node_address)
-        }
-        .unwrap_or_default();
-        for req in active_requests {
-            let (req_id, contact, body) = req.into_request_parts();
-            trace!(
-                "Active request to be replayed. {}, {contact}, {body}",
-                RequestId::from(&req_id),
-            );
-            // Remove the request from the packet filter here since the request is added in
-            // `self.send_request()` again.
-            self.remove_expected_response(contact.socket_addr());
-            if let Err(request_error) = self.send_request::<P>(contact, req_id.clone(), body).await
+
+        let packets = if let Some(session) = self.sessions.get_mut(&node_address) {
+            let mut packets = vec![];
+            for request_call in self
+                .active_requests
+                .get(node_address)
+                .unwrap_or(&mut vec![])
+                .iter()
+                .filter(|req| {
+                    if let Some(nonce) = message_nonce.as_ref() {
+                        req.packet().message_nonce() != nonce
+                    } else {
+                        true
+                    }
+                })
             {
-                warn!("Failed to send next awaiting request {request_error}");
-                // Inform the service that the request failed
-                match req_id {
-                    HandlerReqId::Internal(_) => {
-                        // An internal request could not be sent. For now we do nothing about
-                        // this.
-                    }
-                    HandlerReqId::External(id) => {
-                        if let Err(e) = self
-                            .service_send
-                            .send(HandlerOut::RequestFailed(id, request_error))
-                            .await
-                        {
-                            warn!("Failed to inform that request failed {e}");
-                        }
-                    }
-                }
+                let new_packet = session
+                    .encrypt_message::<P>(self.node_id, &request_call.encode())
+                    .unwrap();
+
+                packets.push((request_call.packet().message_nonce().clone(), new_packet));
             }
+
+            packets
+        } else {
+            debug_unreachable!("expected to find node address in active_requests_mapping");
+            error!("expected to find node address in active_requests_mapping");
+            return;
+        };
+
+        for (old_nonce, new_packet) in packets {
+            self.active_requests.update_packet(old_nonce, new_packet.clone());
+            self.send(node_address.clone(), new_packet).await;
         }
+
+        // for request_call in self.active_requests
+        //     .get_mut(node_address)
+        //     .unwrap_or(&mut vec![])
+        //     .iter_mut()
+        //     .filter(|req| {
+        //         if let Some(nonce) = message_nonce.as_ref() {
+        //             req.packet().message_nonce() != nonce
+        //         } else {
+        //             true
+        //         }
+        //     }) {
+        //
+        //     let packet = session
+        //         .encrypt_message::<P>(self.node_id, &request_call.encode())
+        //         .unwrap();
+        //         //.map_err(|e| RequestError::EncryptionFailed(format!("{e:?}")))?;
+        //
+        //     request_call.update_packet(packet.clone());
+        //     self.send(node_address.clone(), packet).await;
+        // }
+
+        // for active_request in self.active_requests
+        //     .get(node_address)
+        //     .unwrap_or_default()
+        //     .iter()
+        //     .filter(|req| req.packet().message_nonce() != )
+
+        // for req in active_requests {
+        //     let (req_id, contact, body) = req.into_request_parts();
+        //     trace!(
+        //         "Active request to be replayed. {}, {contact}, {body}",
+        //         RequestId::from(&req_id),
+        //     );
+        //     // Remove the request from the packet filter here since the request is added in
+        //     // `self.send_request()` again.
+        //     self.remove_expected_response(contact.socket_addr());
+        //     if let Err(request_error) = self.send_request::<P>(contact, req_id.clone(), body).await
+        //     {
+        //         warn!("Failed to send next awaiting request {request_error}");
+        //         // Inform the service that the request failed
+        //         match req_id {
+        //             HandlerReqId::Internal(_) => {
+        //                 // An internal request could not be sent. For now we do nothing about
+        //                 // this.
+        //             }
+        //             HandlerReqId::External(id) => {
+        //                 if let Err(e) = self
+        //                     .service_send
+        //                     .send(HandlerOut::RequestFailed(id, request_error))
+        //                     .await
+        //                 {
+        //                     warn!("Failed to inform that request failed {e}");
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     /// Handle a standard message that does not contain an authentication header.
@@ -1319,7 +1373,10 @@ impl Handler {
                 }
             }
         }
-        trace!("fail_session. active_requests: {:?}", self.active_requests.get(node_address));
+        trace!(
+            "fail_session. active_requests: {:?}",
+            self.active_requests.get(node_address)
+        );
         // fail all active requests
         for req in self
             .active_requests
