@@ -13,7 +13,7 @@ use rand::Rng;
 use crate::{node_info::NodeAddress, Enr, IpMode};
 
 /// The expected shortest lifetime in most NAT configurations of a punched hole in seconds.
-pub const DEFAULT_HOLE_PUNCH_LIFETIME: u64 = 20;
+pub const DEFAULT_HOLE_PUNCH_LIFETIME: u64 = 3;
 /// The default number of ports to try before concluding that the local node is behind NAT.
 pub const PORT_BIND_TRIES: usize = 4;
 /// Port range that is not impossible to bind to.

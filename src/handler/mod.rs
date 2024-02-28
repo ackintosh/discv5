@@ -377,6 +377,7 @@ impl Handler {
         let mut banned_nodes_check = tokio::time::interval(Duration::from_secs(BANNED_NODES_CHECK));
 
         loop {
+            warn!("handler loop");
             tokio::select! {
                 Some(handler_request) = self.service_recv.recv() => {
                     match handler_request {
@@ -440,11 +441,12 @@ impl Handler {
                     self.send_pending_requests::<P>(&node_address).await;
                 }
                 Some(Ok(peer_socket)) = self.nat.hole_punch_tracker.next() => {
-                    if self.nat.is_behind_nat == Some(false) {
+                    warn!("hole_punch_tracker.next");
+                    // if self.nat.is_behind_nat == Some(false) {
                         // Until ip voting is done and an observed public address is finalised, all nodes act as
                         // if they are behind a NAT.
-                        return;
-                    }
+                        continue;
+                    // }
                     if let Err(e) = self.on_hole_punch_expired(peer_socket).await {
                         warn!("Failed to keep hole punched for peer, error: {:?}", e);
                     }
