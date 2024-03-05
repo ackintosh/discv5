@@ -9,6 +9,7 @@ use delay_map::HashSetDelay;
 use enr::NodeId;
 use lru::LruCache;
 use rand::Rng;
+use tracing::warn;
 
 use crate::{node_info::NodeAddress, Enr, IpMode};
 
@@ -85,6 +86,7 @@ impl Nat {
     }
 
     pub fn track(&mut self, peer_socket: SocketAddr) {
+        warn!("ackintosh track peer_socket:{}", peer_socket);
         if self.is_behind_nat == Some(false) {
             return;
         }

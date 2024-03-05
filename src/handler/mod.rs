@@ -375,6 +375,7 @@ impl Handler {
     /// The main execution loop for the handler.
     async fn start<P: ProtocolIdentity>(&mut self) {
         let mut banned_nodes_check = tokio::time::interval(Duration::from_secs(BANNED_NODES_CHECK));
+        let mut debug_interval = tokio::time::interval(Duration::from_secs(30));
 
         loop {
             tokio::select! {
@@ -440,6 +441,7 @@ impl Handler {
                     self.send_pending_requests::<P>(&node_address).await;
                 }
                 Some(Ok(peer_socket)) = self.nat.hole_punch_tracker.next() => {
+                    warn!("ackintosh start hole_punch_tracker.next peer_socket:{}", peer_socket);
                     if self.nat.is_behind_nat == Some(false) {
                         // Until ip voting is done and an observed public address is finalised, all nodes act as
                         // if they are behind a NAT.
@@ -450,6 +452,9 @@ impl Handler {
                     }
                 }
                 _ = banned_nodes_check.tick() => self.unban_nodes_check(), // Unban nodes that are past the timeout
+                _ = debug_interval.tick() => {
+                    warn!("ackintosh start is_behind_nat:{:?} hole_punch_tracker_len:{}", self.nat.is_behind_nat, self.nat.hole_punch_tracker.len());
+                }
                 _ = &mut self.exit => {
                     return;
                 }
@@ -1860,6 +1865,7 @@ impl Handler {
 
     #[inline]
     async fn on_hole_punch_expired(&mut self, peer: SocketAddr) -> Result<(), NatError> {
+        warn!("ackintosh on_hole_punch_expired peer:{}", peer);
         self.send_outbound(peer.into()).await;
         Ok(())
     }
