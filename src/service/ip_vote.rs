@@ -51,6 +51,9 @@ impl IpVote {
                 SocketAddr::V6(socket) => *ip6_count.entry(*socket).or_insert_with(|| 0) += 1,
             }
         }
+        println!("minimum_threshold = {}", self.minimum_threshold);
+        println!("vote_duration = {:?}", self.vote_duration);
+        println!("ip6_count = {:?}", ip6_count);
 
         // find the maximum socket addr
         let ip4_majority = majority(ip4_count.into_iter(), &self.minimum_threshold);

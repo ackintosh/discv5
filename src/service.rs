@@ -361,6 +361,7 @@ impl Service {
                             self.talk_request(node_contact, protocol, request, callback);
                         }
                         ServiceRequest::Ping(enr, callback) => {
+                            error!("ackintosh start ServiceRequest::Ping");
                             self.send_ping(enr, callback);
                         }
                         ServiceRequest::RequestEventStream(callback) => {
@@ -456,6 +457,7 @@ impl Service {
                     }
                 }
                 Some(Ok(node_id)) = self.peers_to_ping.next() => {
+                    warn!("ackintosh start -> peers_to_ping.next");
                     // If the node is in the routing table, Ping it and re-queue the node.
                     let key = kbucket::Key::from(node_id);
                     let enr =  {
@@ -818,6 +820,7 @@ impl Service {
                             if status.is_connected() && !status.is_incoming());
 
                         if should_count | self.require_more_ip_votes(socket.is_ipv6()) {
+                            debug!("ackintosh handle_rpc_response -> Pong -> should_count");
                             // get the advertised local addresses
                             let (local_ip4_socket, local_ip6_socket) = {
                                 let local_enr = self.local_enr.read();
@@ -825,8 +828,10 @@ impl Service {
                             };
 
                             if let Some(ref mut ip_votes) = self.ip_votes {
+                                debug!("ackintosh handle_rpc_response -> Pong -> should_count -> inserted a vote. node:{node_id}, socket:{socket:?}");
                                 ip_votes.insert(node_id, socket);
                                 let (maybe_ip4_majority, maybe_ip6_majority) = ip_votes.majority();
+                                debug!("ackintosh handle_rpc_response -> Pong -> should_count -> majority. maybe_ip4_majority:{maybe_ip4_majority:?}, maybe_ip6_majority:{maybe_ip6_majority:?}");
 
                                 let new_ip4 = maybe_ip4_majority.and_then(|majority| {
                                     if Some(majority) != local_ip4_socket {
@@ -843,6 +848,7 @@ impl Service {
                                     }
                                 });
 
+                                debug!("ackintosh handle_rpc_response -> Pong -> should_count -> new_ip. new_ip4:{new_ip4:?}, new_ip6:{new_ip6:?}");
                                 if new_ip4.is_some() || new_ip6.is_some() {
                                     let mut updated = false;
 
@@ -937,6 +943,7 @@ impl Service {
         enr: Enr,
         callback: Option<oneshot::Sender<Result<Pong, RequestError>>>,
     ) {
+        warn!("ackintosh send_ping");
         match NodeContact::try_from_enr(enr, self.ip_mode) {
             Ok(contact) => {
                 let request_body = RequestBody::Ping {
@@ -971,6 +978,7 @@ impl Service {
                 .collect::<Vec<_>>()
         };
 
+        warn!("ackintosh ping_connected_peers");
         for enr in connected_peers {
             self.send_ping(enr.clone(), None);
         }
@@ -1421,6 +1429,7 @@ impl Service {
                 }
             };
             if let Some(enr) = optional_enr {
+                warn!("ackintsoh connection_updated");
                 self.send_ping(enr, None)
             }
         }
