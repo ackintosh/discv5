@@ -330,6 +330,7 @@ impl Service {
     /// The main execution loop of the discv5 serviced.
     async fn start(&mut self) {
         loop {
+            info!("ackintosh Service::start -> loop");
             tokio::select! {
                 _ = &mut self.exit => {
                     if let Some(exit) = self.handler_exit.take() {
@@ -487,6 +488,7 @@ impl Service {
                     }
                 }
             }
+            info!("ackintosh Service::start -> loop -> end");
         }
     }
 
@@ -1619,7 +1621,8 @@ impl Service {
     /// A future that maintains the routing table and inserts nodes when required. This returns the
     /// [`Event::NodeInserted`] variant if a new node has been inserted into the routing table.
     async fn bucket_maintenance_poll(kbuckets: &Arc<RwLock<KBucketsTable<NodeId, Enr>>>) -> Event {
-        future::poll_fn(move |_cx| {
+        info!("ackintosh -> Service::bucket_maintenance_poll");
+        let a = future::poll_fn(move |_cx| {
             // Drain applied pending entries from the routing table.
             if let Some(entry) = kbuckets.write().take_applied_pending() {
                 let event = Event::NodeInserted {
@@ -1630,13 +1633,16 @@ impl Service {
             }
             Poll::Pending
         })
-        .await
+        .await;
+        info!("ackintosh -> Service::bucket_maintenance_poll -> end");
+        a
     }
 
     /// A future the maintains active queries. This returns completed and timed out queries, as
     /// well as queries which need to be driven further with extra requests.
     async fn query_event_poll(queries: &mut QueryPool<QueryInfo, NodeId, Enr>) -> QueryEvent {
-        future::poll_fn(move |_cx| match queries.poll() {
+        info!("ackintosh -> Service::query_event_poll");
+        let a = future::poll_fn(move |_cx| match queries.poll() {
             QueryPoolState::Finished(query) => Poll::Ready(QueryEvent::Finished(Box::new(query))),
             QueryPoolState::Waiting(Some((query, return_peer))) => {
                 let node_id = return_peer;
@@ -1647,7 +1653,9 @@ impl Service {
             QueryPoolState::Timeout(query) => Poll::Ready(QueryEvent::TimedOut(Box::new(query))),
             QueryPoolState::Waiting(None) | QueryPoolState::Idle => Poll::Pending,
         })
-        .await
+        .await;
+        info!("ackintosh -> Service::query_event_poll -> end");
+        a
     }
 }
 

@@ -146,6 +146,7 @@ impl ConnectivityState {
     }
 
     pub async fn poll(&mut self) -> TimerFailure {
+        info!("ackintosh -> connectivity_state -> poll()");
         let ipv4_fired = match (
             self.ipv4_incoming_wait_time.as_mut(),
             self.ipv6_incoming_wait_time.as_mut(),
@@ -156,9 +157,19 @@ impl ConnectivityState {
                     Either::Right(_) => false, // Ipv6 fired,
                 }
             }
-            (Some(ipv4_sleep), None) => ipv4_sleep.map(|_| true).await,
+            (Some(ipv4_sleep), None) => {
+                info!("ackintosh -> connectivity_state -> poll() -> ipv4_sleep");
+                let a = ipv4_sleep.map(|_| true).await;
+                info!("ackintosh -> connectivity_state -> poll() -> ipv4_sleep -> end");
+                a
+            },
             (None, Some(ipv6_sleep)) => ipv6_sleep.map(|_| false).await,
-            (None, None) => pending().await,
+            (None, None) => {
+                info!("ackintosh -> connectivity_state -> poll() -> pending");
+                let a = pending().await;
+                info!("ackintosh -> connectivity_state -> poll() -> pending -> end");
+                a
+            },
         };
 
         if ipv4_fired {
@@ -166,6 +177,7 @@ impl ConnectivityState {
                 Instant::now() + DURATION_UNTIL_NEXT_CONNECTIVITY_ATTEMPT;
             self.ipv4_incoming_wait_time = None;
             METRICS.ipv4_contactable.store(false, Ordering::Relaxed);
+            info!("ackintosh -> connectivity_state -> poll() -> return");
             TimerFailure::V4
         } else {
             // Ipv6 fired
@@ -173,6 +185,7 @@ impl ConnectivityState {
                 Instant::now() + DURATION_UNTIL_NEXT_CONNECTIVITY_ATTEMPT;
             self.ipv6_incoming_wait_time = None;
             METRICS.ipv6_contactable.store(false, Ordering::Relaxed);
+            info!("ackintosh -> connectivity_state -> poll() -> return");
             TimerFailure::V6
         }
     }
