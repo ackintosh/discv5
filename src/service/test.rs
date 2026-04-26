@@ -54,15 +54,13 @@ fn init() {
         .try_init();
 }
 
-async fn build_service(
+async fn build_service_with(
     local_enr: Arc<RwLock<Enr>>,
     enr_key: Arc<RwLock<CombinedKey>>,
     filters: bool,
+    listen_config: ListenConfig,
+    ip_mode: IpMode,
 ) -> Service {
-    let listen_config = ListenConfig::Ipv4 {
-        ip: local_enr.read().ip4().unwrap(),
-        port: local_enr.read().udp4().unwrap(),
-    };
     let config = ConfigBuilder::new(listen_config)
         .executor(Box::<crate::executor::TokioExecutor>::default())
         .build();
@@ -111,9 +109,33 @@ async fn build_service(
         event_stream: None,
         exit,
         config,
-        ip_mode: Default::default(),
+        ip_mode,
         connectivity_state,
     }
+}
+
+async fn build_service(
+    local_enr: Arc<RwLock<Enr>>,
+    enr_key: Arc<RwLock<CombinedKey>>,
+    filters: bool,
+) -> Service {
+    let listen_config = ListenConfig::Ipv4 {
+        ip: local_enr.read().ip4().unwrap(),
+        port: local_enr.read().udp4().unwrap(),
+    };
+    build_service_with(local_enr, enr_key, filters, listen_config, IpMode::Ip4).await
+}
+
+async fn build_service_ipv6(
+    local_enr: Arc<RwLock<Enr>>,
+    enr_key: Arc<RwLock<CombinedKey>>,
+    filters: bool,
+) -> Service {
+    let listen_config = ListenConfig::Ipv6 {
+        ip: local_enr.read().ip6().unwrap(),
+        port: local_enr.read().udp6().unwrap(),
+    };
+    build_service_with(local_enr, enr_key, filters, listen_config, IpMode::Ip6).await
 }
 
 fn build_non_handler_service(
@@ -583,13 +605,14 @@ async fn test_connectivity_metrics_updated_on_incoming_connections_ipv6() {
     METRICS.ipv6_contactable.store(false, Ordering::Relaxed);
 
     let enr_key = CombinedKey::generate_secp256k1();
+    let ip6 = Ipv6Addr::LOCALHOST;
     let enr = Enr::builder()
-        .ip4(Ipv4Addr::LOCALHOST)
-        .udp4(DEFAULT_UDP_PORT)
+        .ip6(ip6)
+        .udp6(DEFAULT_UDP_PORT)
         .build(&enr_key)
         .unwrap();
 
-    let mut service = build_service(
+    let mut service = build_service_ipv6(
         Arc::new(RwLock::new(enr)),
         Arc::new(RwLock::new(enr_key)),
         false,
@@ -605,7 +628,7 @@ async fn test_connectivity_metrics_updated_on_incoming_connections_ipv6() {
     // NUMBER_OF_INCOMING_CONNECTIONS_REQUIRED_TO_BE_VALID.
     let peer_key = CombinedKey::generate_secp256k1();
     let peer_enr = Enr::builder()
-        .ip6(Ipv6Addr::LOCALHOST)
+        .ip6(ip6)
         .udp6(DEFAULT_UDP_PORT)
         .build(&peer_key)
         .unwrap();
