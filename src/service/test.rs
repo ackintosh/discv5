@@ -15,14 +15,13 @@ use crate::{
     socket::ListenConfig,
     ConfigBuilder, Enr,
 };
-use std::sync::atomic::Ordering;
 use enr::CombinedKey;
 use parking_lot::RwLock;
 use rand;
 use std::{
     collections::HashMap,
     net::{Ipv4Addr, Ipv6Addr},
-    sync::Arc,
+    sync::{atomic::Ordering, Arc},
     time::Duration,
 };
 use tokio::sync::{
