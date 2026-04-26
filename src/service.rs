@@ -616,12 +616,13 @@ impl Service {
                 // check if we need to update the known ENR
                 let mut to_request_enr = None;
                 match self.kbuckets.write().entry(&node_address.node_id.into()) {
-                    kbucket::Entry::Present(ref mut entry, _) => {
-                        if entry.value().seq() < enr_seq {
-                            let enr = entry.value().clone();
-                            to_request_enr = Some(enr);
-                        }
+                    kbucket::Entry::Present(ref entry, _) if entry.value().seq() < enr_seq => {
+                        let enr = entry.value().clone();
+                        to_request_enr = Some(enr);
                     }
+                    // PendingEntry::value() requires &mut self, so the condition cannot be placed
+                    // in the pattern guard (E0596). The inner `if` is intentional.
+                    #[allow(clippy::collapsible_match)]
                     kbucket::Entry::Pending(ref mut entry, _) => {
                         if entry.value().seq() < enr_seq {
                             let enr = entry.value().clone();
@@ -1297,6 +1298,9 @@ impl Service {
                     kbucket::Entry::Present(entry, _) if entry.value().seq() < enr.seq() => {
                         entry.remove()
                     }
+                    // PendingEntry::value() requires &mut self, so the condition cannot be placed
+                    // in the pattern guard (E0596). The inner `if` is intentional.
+                    #[allow(clippy::collapsible_match)]
                     kbucket::Entry::Pending(mut entry, _) => {
                         if entry.value().seq() < enr.seq() {
                             entry.remove()
