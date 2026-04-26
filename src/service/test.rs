@@ -7,6 +7,7 @@ use crate::{
     handler::Handler,
     kbucket,
     kbucket::{BucketInsertResult, KBucketsTable, NodeStatus},
+    metrics::METRICS,
     node_info::NodeContact,
     query_pool::{QueryId, QueryPool},
     rpc::RequestId,
@@ -14,6 +15,7 @@ use crate::{
     socket::ListenConfig,
     ConfigBuilder, Enr,
 };
+use std::sync::atomic::Ordering;
 use enr::CombinedKey;
 use parking_lot::RwLock;
 use rand;
@@ -509,4 +511,122 @@ async fn test_ipv6_update_amongst_ipv4_dominated_network() {
 
     // Should be 10 ipv6 pings
     assert_eq!(v6_pings, 10)
+}
+
+// Tests that METRICS.ipv4_contactable is set to true once enough incoming connections are received
+// during an active auto-NAT listen window.
+#[tokio::test]
+async fn test_connectivity_metrics_updated_on_incoming_connections() {
+    init();
+
+    // Ensure a clean state for the global METRICS.
+    METRICS.ipv4_contactable.store(false, Ordering::Relaxed);
+
+    let enr_key = CombinedKey::generate_secp256k1();
+    let ip = Ipv4Addr::LOCALHOST;
+    let enr = Enr::builder()
+        .ip4(ip)
+        .udp4(DEFAULT_UDP_PORT)
+        .build(&enr_key)
+        .unwrap();
+
+    let mut service = build_service(
+        Arc::new(RwLock::new(enr)),
+        Arc::new(RwLock::new(enr_key)),
+        false,
+    )
+    .await;
+
+    let ipv4_socket: SocketAddr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 9000);
+
+    // Simulate an ENR socket update to start the auto-NAT timer. Without this,
+    // received_incoming_connection() returns early because the wait timer is None.
+    service.connectivity_state.enr_socket_update(&ipv4_socket);
+
+    // Inject incoming connections. Two are required to reach
+    // NUMBER_OF_INCOMING_CONNECTIONS_REQUIRED_TO_BE_VALID.
+    let peer_key = CombinedKey::generate_secp256k1();
+    let peer_enr = Enr::builder()
+        .ip4(ip)
+        .udp4(DEFAULT_UDP_PORT)
+        .build(&peer_key)
+        .unwrap();
+
+    service.inject_session_established(
+        peer_enr.clone(),
+        &ipv4_socket,
+        ConnectionDirection::Incoming,
+    );
+    service.inject_session_established(
+        peer_enr.clone(),
+        &ipv4_socket,
+        ConnectionDirection::Incoming,
+    );
+
+    // ipv4_contactable should now be true.
+    assert!(
+        METRICS.ipv4_contactable.load(Ordering::Relaxed),
+        "ipv4_contactable should be true after receiving enough incoming connections"
+    );
+
+    // Clean up to avoid affecting other tests.
+    METRICS.ipv4_contactable.store(false, Ordering::Relaxed);
+}
+
+// Tests that METRICS.ipv6_contactable is set to true once enough incoming connections are received
+// during an active auto-NAT listen window.
+#[tokio::test]
+async fn test_connectivity_metrics_updated_on_incoming_connections_ipv6() {
+    init();
+
+    // Ensure a clean state for the global METRICS.
+    METRICS.ipv6_contactable.store(false, Ordering::Relaxed);
+
+    let enr_key = CombinedKey::generate_secp256k1();
+    let enr = Enr::builder()
+        .ip4(Ipv4Addr::LOCALHOST)
+        .udp4(DEFAULT_UDP_PORT)
+        .build(&enr_key)
+        .unwrap();
+
+    let mut service = build_service(
+        Arc::new(RwLock::new(enr)),
+        Arc::new(RwLock::new(enr_key)),
+        false,
+    )
+    .await;
+
+    let ipv6_socket: SocketAddr = SocketAddr::new(Ipv6Addr::LOCALHOST.into(), 9000);
+
+    // Simulate an ENR socket update to start the auto-NAT timer for IPv6.
+    service.connectivity_state.enr_socket_update(&ipv6_socket);
+
+    // Inject incoming connections. Two are required to reach
+    // NUMBER_OF_INCOMING_CONNECTIONS_REQUIRED_TO_BE_VALID.
+    let peer_key = CombinedKey::generate_secp256k1();
+    let peer_enr = Enr::builder()
+        .ip6(Ipv6Addr::LOCALHOST)
+        .udp6(DEFAULT_UDP_PORT)
+        .build(&peer_key)
+        .unwrap();
+
+    service.inject_session_established(
+        peer_enr.clone(),
+        &ipv6_socket,
+        ConnectionDirection::Incoming,
+    );
+    service.inject_session_established(
+        peer_enr.clone(),
+        &ipv6_socket,
+        ConnectionDirection::Incoming,
+    );
+
+    // ipv6_contactable should now be true.
+    assert!(
+        METRICS.ipv6_contactable.load(Ordering::Relaxed),
+        "ipv6_contactable should be true after receiving enough incoming connections"
+    );
+
+    // Clean up to avoid affecting other tests.
+    METRICS.ipv6_contactable.store(false, Ordering::Relaxed);
 }
